@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { getUsers } from "./api";
 
 function App() {
-  const [data, setData] = useState([]);
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
@@ -11,21 +10,40 @@ function App() {
   }, []);
 
   return (
-    <div style={{ padding: "2rem" }}>
-      <h1>React + FastAPI + Supabase</h1>
+    <div style={{ padding: "2rem", textAlign: "center" }}>
+      <h1>Crosswars!</h1>
 
-      <h2>Users</h2>
-      {users.length === 0 ? (
-        <p>No users found.</p>
-      ) : (
-        <ul>
-          {users.map((user) => (
-            <li key={user.id}>
-              {user.name} ({user.email})
-            </li>
-          ))}
-        </ul>
-      )}
+      {/* Play as Guest button */}
+      <button
+        style={{
+          marginTop: "1rem",
+          padding: "0.6rem 1.2rem",
+          fontSize: "1rem",
+          backgroundColor: "#000000",
+          color: "white",
+          border: "none",
+          borderRadius: "8px",
+          cursor: "pointer",
+        }}
+      >
+        Play as Guest
+      </button>
+
+      {/* Login button */}
+      <button
+        style={{
+          marginTop: "1rem",
+          padding: "0.6rem 1.2rem",
+          fontSize: "1rem",
+          backgroundColor: "#000000",
+          color: "white",
+          border: "none",
+          borderRadius: "8px",
+          cursor: "pointer",
+        }}
+      >
+        Login
+      </button>
     </div>
   );
 }
