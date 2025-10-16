@@ -5,7 +5,6 @@ function App() {
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
-    // Fetch users from backend
     getUsers().then(setUsers);
   }, []);
 
@@ -13,37 +12,45 @@ function App() {
     <div style={{ padding: "2rem", textAlign: "center" }}>
       <h1>Crosswars!</h1>
 
-      {/* Play as Guest button */}
-      <button
+      {/* Button container */}
+      <div
         style={{
+          display: "flex",
+          flexDirection: "column", // stack vertically
+          alignItems: "center",
+          gap: "1rem", // space between buttons
           marginTop: "1rem",
-          padding: "0.6rem 1.2rem",
-          fontSize: "1rem",
-          backgroundColor: "#000000",
-          color: "white",
-          border: "none",
-          borderRadius: "8px",
-          cursor: "pointer",
+          
         }}
       >
-        Play as Guest
-      </button>
+        <button
+          style={{
+            padding: "0.6rem 1.2rem",
+            fontSize: "1rem",
+            backgroundColor: "#000000",
+            color: "white",
+            border: "none",
+            borderRadius: "8px",
+            cursor: "pointer",
+          }}
+        >
+          Login
+        </button>
 
-      {/* Login button */}
-      <button
-        style={{
-          marginTop: "1rem",
-          padding: "0.6rem 1.2rem",
-          fontSize: "1rem",
-          backgroundColor: "#000000",
-          color: "white",
-          border: "none",
-          borderRadius: "8px",
-          cursor: "pointer",
-        }}
-      >
-        Login
-      </button>
+        <button
+          style={{
+            padding: "0.6rem 1.2rem",
+            fontSize: "1rem",
+            backgroundColor: "#000000",
+            color: "white",
+            border: "none",
+            borderRadius: "8px",
+            cursor: "pointer",
+          }}
+        >
+          Play as Guest
+        </button>
+      </div>
     </div>
   );
 }
