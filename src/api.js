@@ -17,3 +17,8 @@ export const getData = async (path = "/api/data") => {
 export const getUsers = async () => {
   return getData("/users");
 };
+
+export const createUser = async (user) => {
+  const res = await API.post("/users", user); // your backend /users route
+  return res.data;
+};
