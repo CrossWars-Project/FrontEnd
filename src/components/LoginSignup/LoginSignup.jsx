@@ -36,9 +36,19 @@ const LoginSignup = () => {
         alert(error.response?.data?.message || "Error creating account");
       }
     } else {
-      //add login logic later
+      // Login
+      try {
+        const data = await loginUser({ email, password });
+        alert("Login successful!");
+        console.log("Logged in:", data);
+        // optionally redirect to /dashboard or save token
+      } catch (error) {
+        console.error(error);
+        alert(error.response?.data?.message || "Login failed");
+      }
     }
   };
+
 
   // is the actual structure of the Login/Sign Up component. Corresponds to the LoginSignup.css file
   // which chooses the colors/alignment etc of everything
