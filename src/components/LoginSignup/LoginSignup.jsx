@@ -25,7 +25,7 @@ const LoginSignup = () => {
     if (action === "Sign Up") {
       const result = await signUpNewUser({ email, password });
       if (result.success) {
-        navigate("/dashboard"); // or wherever
+        navigate("/Dashboard");
       } else {
         console.error(result.error);
       }
