@@ -1,31 +1,63 @@
 import { useEffect, useState } from "react";
 import { getUsers } from "./api";
+import LoginSignup from "./components/LoginSignup/LoginSignup.jsx";
 
 function App() {
-  const [data, setData] = useState([]);
   const [users, setUsers] = useState([]);
+  const [showLogin, setShowLogin] = useState(false); // <-- add this
 
   useEffect(() => {
-    // Fetch users from backend
     getUsers().then(setUsers);
   }, []);
 
-  return (
-    <div style={{ padding: "2rem" }}>
-      <h1>React + FastAPI + Supabase</h1>
+  // If login is active, render the login/signup screen
+  if (showLogin) {
+    return <LoginSignup />;
+  }
 
-      <h2>Users</h2>
-      {users.length === 0 ? (
-        <p>No users found.</p>
-      ) : (
-        <ul>
-          {users.map((user) => (
-            <li key={user.id}>
-              {user.name} ({user.email})
-            </li>
-          ))}
-        </ul>
-      )}
+  return (
+    <div style={{ padding: "2rem", textAlign: "center" }}>
+      <h1>Crosswars!</h1>
+
+      {/* Button container */}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column", // stack vertically
+          alignItems: "center",
+          gap: "1rem",
+          marginTop: "1rem",
+        }}
+      >
+        <button
+          onClick={() => setShowLogin(true)} // <-- show login on click
+          style={{
+            padding: "0.6rem 1.2rem",
+            fontSize: "1rem",
+            backgroundColor: "#000000",
+            color: "white",
+            border: "none",
+            borderRadius: "8px",
+            cursor: "pointer",
+          }}
+        >
+          Login
+        </button>
+
+        <button
+          style={{
+            padding: "0.6rem 1.2rem",
+            fontSize: "1rem",
+            backgroundColor: "#000000",
+            color: "white",
+            border: "none",
+            borderRadius: "8px",
+            cursor: "pointer",
+          }}
+        >
+          Play as Guest
+        </button>
+      </div>
     </div>
   );
 }

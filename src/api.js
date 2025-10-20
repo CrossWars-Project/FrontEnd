@@ -17,3 +17,13 @@ export const getData = async (path = "/api/data") => {
 export const getUsers = async () => {
   return getData("/users");
 };
+
+export const createUser = async (user) => {
+  const res = await API.post("/users", user); // your backend /users route
+  return res.data;
+};
+
+export const loginUser = async (credentials) => {
+  const res = await API.post("/login", credentials); // backend login route
+  return res.data;
+};
