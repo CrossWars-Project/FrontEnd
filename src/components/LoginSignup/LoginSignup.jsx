@@ -1,54 +1,49 @@
 import React, { useState } from "react";
 import "./LoginSignup.css";
+import { UserAuth } from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const LoginSignup = () => {
   const [action, setAction] = useState("Login");
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const { session, signUpNewUser, loginUser} = UserAuth(); 
+  const navigate = useNavigate()
 
   /*
   * handleSubmit is what will either post a new user to the database in the Sign Up case
   * or verify a user's information with info in the database in the Login case
   */
- const handleSubmit = async () => {
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+
+  try {
     if (action === "Sign Up") {
-      if (!displayName || !email || !password) {
-        alert("Please fill out all fields");
-        return;
-      }
-
-      try {
-        const data = await createUser({
-          name: displayName,
-          email,
-          password,
-        });
-        alert("Account created successfully!");
-        console.log("Created user:", data);
-
-        setDisplayName("");
-        setEmail("");
-        setPassword("");
-        setAction("Login");
-      } catch (error) {
-        console.error(error);
-        alert(error.response?.data?.message || "Error creating account");
+      const result = await signUpNewUser({ email, password });
+      if (result.success) {
+        navigate("/dashboard"); // or wherever
+      } else {
+        console.error(result.error);
       }
     } else {
-      // Login
-      try {
-        const data = await loginUser({ email, password });
-        alert("Login successful!");
-        console.log("Logged in:", data);
-        // optionally redirect to /dashboard or save token
-      } catch (error) {
-        console.error(error);
-        alert(error.response?.data?.message || "Login failed");
+      const result = await loginUser({ email, password });
+      if (result.success) {
+        navigate("/dashboard");
+      } else {
+        console.error(result.error);
       }
     }
-  };
-
+  } catch (err) {
+    console.error("An unexpected error occurred: ", err);
+  } finally {
+    setLoading(false);
+  }
+};
+ 
 
   // is the actual structure of the Login/Sign Up component. Corresponds to the LoginSignup.css file
   // which chooses the colors/alignment etc of everything
