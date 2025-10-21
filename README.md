@@ -30,6 +30,10 @@ If you are developing a production application, we recommend using TypeScript wi
 >> npm install
 ### 3. Set up environement 
 - change .env.example to just .env
+- in your .env file you should have exactly: 
+VITE_API_URL=http://127.0.0.1:8000
+VITE_SUPABASE_URL=https://byhqkcehtdbknddgzzto.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ5aHFrY2VodGRia25kZGd6enRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAxMzMyOTEsImV4cCI6MjA3NTcwOTI5MX0.GcRx9x9lNTdLpS-Q0dsDpG4YucP6UcfpzckigpFPSbc
 - if necessary replace http://127.0.0.1:8000 to whatever your backend port is 
 ### 4. Start Development server
 >> npm run dev
