@@ -40,7 +40,7 @@ const LoginSignup = () => {
     <div className="login-container">
       <div className="login-card">
         <div className="logo-container">
-          <img src="/logo.png" alt="Cross Wars Logo" className="logo" />
+          <img src="src/components/assets/logo.png" alt="Cross Wars Logo" className="logo" />
         </div>
 
         <h1 className="title">{action === "Login" ? "Log in" : "Sign up"}</h1>
