@@ -33,7 +33,7 @@ const LoginSignup = () => {
   };
 
   const handlePlayAsGuest = () => {
-    navigate("/dashboard");
+    navigate("/guestDashboard");
   };
 
   return (
