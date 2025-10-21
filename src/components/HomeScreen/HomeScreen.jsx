@@ -12,7 +12,7 @@ function HomeScreen() {
     <div className="home-container">
       <div className="home-card">
         <div className="logo-container">
-          <img src="/logo.png" alt="Cross Wars Logo" className="logo" />
+          <img src="src/components/assets/logo.png" alt="Cross Wars Logo" className="logo" />
         </div>
 
         <h1 className="home-title">Cross Wars</h1>
