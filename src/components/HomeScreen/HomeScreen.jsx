@@ -4,13 +4,30 @@ import { useNavigate } from "react-router-dom";
 function HomeScreen() {
   const navigate = useNavigate();
 
+  const handlePlayAsGuest = () => {
+    navigate("/dashboard");
+  };
+
   return (
     <div className="home-container">
-      <h1>Crosswars!</h1>
+      <div className="home-card">
+        <div className="logo-container">
+          <img src="/logo.png" alt="Cross Wars Logo" className="logo" />
+        </div>
 
-      <div className="button-container">
-        <button onClick={() => navigate("/loginSignup")}>Login</button>
-        <button>Play as Guest</button>
+        <h1 className="home-title">Cross Wars</h1>
+
+        <div className="button-container">
+          <button
+            className="primary-button"
+            onClick={() => navigate("/loginSignup")}
+          >
+            Log In / Sign Up
+          </button>
+          <button className="guest-button" onClick={handlePlayAsGuest}>
+            ▶ Play as Guest
+          </button>
+        </div>
       </div>
     </div>
   );
