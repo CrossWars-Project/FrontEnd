@@ -5,7 +5,7 @@ function HomeScreen() {
   const navigate = useNavigate();
 
   const handlePlayAsGuest = () => {
-    navigate("/dashboard");
+    navigate("/guestDashboard");
   };
 
   return (
