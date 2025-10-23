@@ -1,5 +1,7 @@
 import "./HomeScreen.css";
 import { useNavigate } from "react-router-dom";
+import { FaUser, FaPlay} from "react-icons/fa";
+
 
 function HomeScreen() {
   const navigate = useNavigate();
@@ -22,10 +24,10 @@ function HomeScreen() {
             className="primary-button"
             onClick={() => navigate("/loginSignup")}
           >
-            Log In / Sign Up
+            <FaUser /> Log In / Sign Up
           </button>
           <button className="guest-button" onClick={handlePlayAsGuest}>
-            ▶ Play as Guest
+            <FaPlay /> Play as Guest
           </button>
         </div>
       </div>
