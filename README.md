@@ -27,7 +27,8 @@ If you are developing a production application, we recommend using TypeScript wi
 ### 1. Clone Repo
 ### 2. Install dependencies
 - install react, vite, and other packages
-- install react icons 
+- install react icons with:
+>> npm install react-icons
 >> npm install
 ### 3. Set up environement 
 - change .env.example to just .env
