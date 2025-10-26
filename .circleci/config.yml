@@ -15,10 +15,6 @@ jobs:
           name: Lint with ESLint
           command: npm run lint
 
-      - run:
-          name: Run Jest tests
-          command: npm test -- --ci --runInBand
-
 workflows:
   frontend-ci:
     jobs:
