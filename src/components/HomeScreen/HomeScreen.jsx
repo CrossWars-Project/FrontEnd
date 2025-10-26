@@ -1,13 +1,12 @@
-import "./HomeScreen.css";
-import { useNavigate } from "react-router-dom";
-import { FaUser, FaPlay} from "react-icons/fa";
-
+import './HomeScreen.css';
+import { useNavigate } from 'react-router-dom';
+import { FaUser, FaPlay } from 'react-icons/fa';
 
 function HomeScreen() {
   const navigate = useNavigate();
 
   const handlePlayAsGuest = () => {
-    navigate("/guestDashboard");
+    navigate('/guestDashboard');
   };
 
   return (
@@ -21,13 +20,18 @@ function HomeScreen() {
 
         <div className="button-container">
           <button
+            type="button"
             className="primary-button"
-            onClick={() => navigate("/loginSignup")}
+            onClick={() => navigate('/loginSignup')}
           >
-            <FaUser /> Log In / Sign Up
+            <FaUser />
+            {' '}
+            Log In / Sign Up
           </button>
-          <button className="guest-button" onClick={handlePlayAsGuest}>
-            <FaPlay /> Play as Guest
+          <button type="button" className="guest-button" onClick={handlePlayAsGuest}>
+            <FaPlay />
+            {' '}
+            Play as Guest
           </button>
         </div>
       </div>
