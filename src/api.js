@@ -21,6 +21,18 @@ export const createUser = async (user) => {
   return res.data;
 };
 
+// this adds a newly created user to the stats table with default stats
+export const createUserStats = async (user) => {
+  const res = await API.post('/stats/create_user_stats', user);
+  return res.data;
+};
+
+// find the stats for a specific user using their ID
+export const getUserStats = async (userId) => {
+  const res = await API.get(`/stats/get_user_stats/${userId}`);
+  return res.data;
+};
+
 export const loginUser = async (credentials) => {
   const res = await API.post('/login', credentials); // backend login route
   return res.data;

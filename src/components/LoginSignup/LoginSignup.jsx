@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import './LoginSignup.css';
 import { useNavigate } from 'react-router-dom';
 import { UserAuth } from '../../context/AuthContext';
+import { createUserStats, getUserStats } from '../../api';
 
 function LoginSignup() {
   const [action, setAction] = useState('Login');
@@ -19,11 +20,40 @@ function LoginSignup() {
 
     try {
       if (action === 'Sign Up') {
-        const result = await signUpNewUser({ email, password });
-        if (result.success) navigate('/dashboard');
+        const result = await signUpNewUser({ email, password, display_name: displayName });
+        // if a new user is successfully created, we want to add them to stats table and then
+        // take them to the dashboard.
+        if (result.success) {
+          // show a friendly message (e.g., toast or inline text)
+          alert('Sign-up successful! Please verify your email before logging in.');
+          setAction('Login'); // redirect to login screen
+        }
       } else {
         const result = await loginUser({ email, password });
-        if (result.success) navigate('/dashboard');
+        if (!result.success) {
+          // Show the error message directly
+          alert(result.error?.message || result.error || 'An unexpected error occurred');
+          return;
+        }
+
+        if (result.success) {
+          const { user } = result.data;
+
+          try {
+          // ✅ Check if stats already exist
+            const statsResponse = await getUserStats(user.id);
+            if (!statsResponse.exists) {
+              await createUserStats({
+                id: user.id,
+                display_name: user.user_metadata?.display_name || user.email.split('@')[0], // fallback
+              });
+            }
+          } catch (err) {
+            console.error('Error while checking/creating stats:', err);
+          // Not fatal — allow navigation
+          }
+          navigate('/dashboard');
+        }
       }
     } catch (err) {
       console.error('An unexpected error occurred:', err);

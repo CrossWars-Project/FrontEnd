@@ -10,10 +10,13 @@ export function AuthContextProvider({ children }) {
   const [session, setSession] = useState(undefined);
 
   // Sign up
-  const signUpNewUser = async ({ email, password }) => {
+  const signUpNewUser = async ({ email, password, displayName }) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: { displayName }, // store the display name in the user table
+      },
     });
 
     if (error) {
@@ -43,12 +46,15 @@ export function AuthContextProvider({ children }) {
   };
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+    // Get current session safely
+    supabase.auth.getSession().then((result) => {
+      const currentSession = result.data?.session ?? null;
       setSession(currentSession);
     });
 
-    supabase.auth.onAuthStateChange((_event, { session: newSession }) => {
-      setSession(newSession);
+    // Listen for auth changes
+    supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession?.session ?? null);
     });
   }, []);
 
