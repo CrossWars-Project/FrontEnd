@@ -28,7 +28,7 @@ function Dashboard() {
   if (!stats) return <p>No stats found for this user.</p>;
 
   return (
-    <h1 className="title">{stats.display_name}'s Stats</h1>
+    <h1 className="title">{`${stats.display_name}'s Stats`}</h1>
   );
 }
 export default Dashboard;
