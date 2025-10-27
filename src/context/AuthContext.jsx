@@ -15,7 +15,7 @@ export function AuthContextProvider({ children }) {
       email,
       password,
       options: {
-        data: { displayName }, // store the display name in the user table
+        data: { display_name: displayName }, // store the display name in the user table
       },
     });
 

@@ -20,7 +20,7 @@ function LoginSignup() {
 
     try {
       if (action === 'Sign Up') {
-        const result = await signUpNewUser({ email, password, display_name: displayName });
+        const result = await signUpNewUser({ email, password, displayName });
         // if a new user is successfully created, we want to add them to stats table and then
         // take them to the dashboard.
         if (result.success) {
