@@ -1,11 +1,3 @@
-/*import React, { useState } from "react";
-
-const Dashboard = () => {
-    return(
-        <h1 className="title">Guest Dashboard</h1>
-    )
-}
-export default Dashboard;*/
 import React from "react";
 import "./GuestDashboard.css";
 import { useNavigate } from "react-router-dom";
@@ -47,9 +39,7 @@ export default function GuestDashboard() {
           <button className="secondary-button" onClick={handleSoloPlay}>
             <FaUser /> Solo Play
           </button>
-          <button className="secondary-button gray" onClick={handleStats}>
-            <FaHashtag /> Stats
-          </button>
+
         </div>
       </div>
     </div>
