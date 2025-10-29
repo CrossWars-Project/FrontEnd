@@ -1,17 +1,7 @@
-/* import React, { useState } from "react";
-
-const Dashboard = () => {
-    return(
-        <h1 className="title">Guest Dashboard</h1>
-    )
-}
-export default Dashboard; */
-import React from 'react';
-import './GuestDashboard.css';
-import { useNavigate } from 'react-router-dom';
-import {
-  FaCog, FaSignOutAlt, FaUserFriends, FaUser, FaHashtag,
-} from 'react-icons/fa';
+import React from "react";
+import "./GuestDashboard.css";
+import { useNavigate } from "react-router-dom";
+import { FaCog, FaSignOutAlt, FaUserFriends, FaUser, FaHashtag } from "react-icons/fa";
 
 export default function GuestDashboard() {
   const navigate = useNavigate();
@@ -55,11 +45,7 @@ export default function GuestDashboard() {
             {' '}
             Solo Play
           </button>
-          <button type="button" className="secondary-button gray" onClick={handleStats}>
-            <FaHashtag />
-            {' '}
-            Stats
-          </button>
+
         </div>
       </div>
     </div>
