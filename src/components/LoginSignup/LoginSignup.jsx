@@ -1,13 +1,14 @@
-import React, { useState } from "react";
-import "./LoginSignup.css";
-import { UserAuth } from "../../context/AuthContext";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from 'react';
+import './LoginSignup.css';
+import { useNavigate } from 'react-router-dom';
+import { UserAuth } from '../../context/AuthContext';
+import { createUserStats, getUserStats } from '../../api';
 
-const LoginSignup = () => {
-  const [action, setAction] = useState("Login");
-  const [displayName, setDisplayName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+function LoginSignup() {
+  const [action, setAction] = useState('Login');
+  const [displayName, setDisplayName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
   const { signUpNewUser, loginUser } = UserAuth();
@@ -18,23 +19,61 @@ const LoginSignup = () => {
     setLoading(true);
 
     try {
-      if (action === "Sign Up") {
-        const result = await signUpNewUser({ email, password });
-        if (result.success) navigate("/dashboard");
+      if (action === 'Sign Up') {
+        const result = await signUpNewUser({ email, password, displayName });
+        // if a new user is successfully created, we want to add them to stats table and then
+        // take them to the dashboard.
+        if (result.success) {
+          // show a friendly message (e.g., toast or inline text)
+          alert('Sign-up successful! Please verify your email before logging in.');
+          setAction('Login'); // redirect to login screen
+        }
       } else {
         const result = await loginUser({ email, password });
-        if (result.success) navigate("/dashboard");
+        if (!result.success) {
+          // Show the error message directly
+          alert(result.error?.message || result.error || 'An unexpected error occurred');
+          return;
+        }
+
+        if (result.success) {
+          const { user } = result.data;
+
+          try {
+          // ✅ Check if stats already exist
+            const statsResponse = await getUserStats(user.id);
+            if (!statsResponse.exists) {
+              await createUserStats({
+                id: user.id,
+                display_name: user.user_metadata?.display_name || user.email.split('@')[0], // fallback
+              });
+            }
+          } catch (err) {
+            console.error('Error while checking/creating stats:', err);
+          // Not fatal — allow navigation
+          }
+          navigate('/dashboard');
+        }
       }
     } catch (err) {
-      console.error("An unexpected error occurred:", err);
+      console.error('An unexpected error occurred:', err);
     } finally {
       setLoading(false);
     }
   };
 
   const handlePlayAsGuest = () => {
-    navigate("/guestDashboard");
+    navigate('/guestDashboard');
   };
+
+  let buttonText;
+  if (loading) {
+    buttonText = 'Loading...';
+  } else if (action === 'Login') {
+    buttonText = 'Log In';
+  } else {
+    buttonText = 'Create Account';
+  }
 
   return (
     <div className="login-container">
@@ -43,9 +82,9 @@ const LoginSignup = () => {
           <img src="src/components/assets/logo.png" alt="Cross Wars Logo" className="logo" />
         </div>
 
-        <h1 className="title">{action === "Login" ? "Log in" : "Sign up"}</h1>
+        <h1 className="title">{action === 'Login' ? 'Log in' : 'Sign up'}</h1>
 
-        {action === "Sign Up" && (
+        {action === 'Sign Up' && (
           <input
             type="text"
             placeholder="Display Name"
@@ -71,40 +110,31 @@ const LoginSignup = () => {
           className="input"
         />
 
-        <button
-          onClick={handleSubmit}
-          className="primary-button"
-          disabled={loading}
-        >
-          {loading
-            ? "Loading..."
-            : action === "Login"
-            ? "Log In"
-            : "Create Account"}
+        <button type="button" onClick={handleSubmit} className="primary-button" disabled={loading}>
+          {buttonText}
         </button>
 
         <div className="toggle-container">
           <p className="toggle-text">
-            {action === "Login" ? "No account yet?" : "Already have an account?"}
+            {action === 'Login' ? 'No account yet?' : 'Already have an account?'}
           </p>
           <button
-            onClick={() =>
-              setAction(action === "Login" ? "Sign Up" : "Login")
-            }
+            type="button"
+            onClick={() => setAction(action === 'Login' ? 'Sign Up' : 'Login')}
             className="secondary-button"
           >
-            {action === "Login" ? "Sign Up" : "Log In"}
+            {action === 'Login' ? 'Sign Up' : 'Log In'}
           </button>
         </div>
 
-        {action === "Login" && (
-          <button onClick={handlePlayAsGuest} className="guest-button">
+        {action === 'Login' && (
+          <button type="button" onClick={handlePlayAsGuest} className="guest-button">
             ▶ Play as Guest
           </button>
         )}
       </div>
     </div>
   );
-};
+}
 
 export default LoginSignup;

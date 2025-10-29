@@ -1,8 +1,8 @@
-import HomeScreen from "./components/HomeScreen/HomeScreen.jsx";
+import HomeScreen from './components/HomeScreen/HomeScreen';
 
 function App() {
   return (
-    <HomeScreen/>
-  )  
+    <HomeScreen />
+  );
 }
 export default App;
