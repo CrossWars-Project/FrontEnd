@@ -1,5 +1,5 @@
 import {
-  createContext, useEffect, useState, useContext, Children, useMemo,
+  createContext, useEffect, useState, useContext, useMemo,
 } from 'react';
 import PropTypes from 'prop-types';
 import supabase from '../supabaseClient';
@@ -7,7 +7,8 @@ import supabase from '../supabaseClient';
 const AuthContext = createContext();
 
 export function AuthContextProvider({ children }) {
-  const [session, setSession] = useState(undefined);
+  const [session, setSession] = useState(null);
+  const [user, setUser] = useState(null);
 
   // Sign up
   const signUpNewUser = async ({ email, password, displayName }) => {
@@ -49,17 +50,22 @@ export function AuthContextProvider({ children }) {
     // Get current session safely
     supabase.auth.getSession().then((result) => {
       const currentSession = result.data?.session ?? null;
+      const currentUser = result.data?.session.user ?? null
       setSession(currentSession);
+      setUser(currentUser);
     });
 
     // Listen for auth changes
-    supabase.auth.onAuthStateChange((_event, newSession) => {
-      setSession(newSession?.session ?? null);
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession);
+      setUser(newSession?.user ?? null);
     });
+
+    return () => listener.subscription.unsubscribe();
   }, []);
 
   // Sign out
-  const signOut = () => {
+  const signOut = async () => {
     const { error } = supabase.auth.signOut();
     if (error) {
       console.error('there was an error: ', error);
@@ -72,10 +78,11 @@ export function AuthContextProvider({ children }) {
 
   const value = useMemo(() => ({
     session,
+    user,
     signUpNewUser,
     loginUser,
     signOut,
-  }), [session]);
+  }), [session, user]);
 
   return (
     <AuthContext.Provider value={value}>
