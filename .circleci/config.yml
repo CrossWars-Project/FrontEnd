@@ -1,21 +1,50 @@
 version: 2.1
 
 jobs:
-  lint:
+  # Linting job
+  linting:
     docker:
       - image: cimg/node:20.5
     steps:
       - checkout
-
+      - restore_cache:
+          keys:
+            - node-deps-{{ checksum "package-lock.json" }}
+            - node-deps-
       - run:
           name: Install dependencies
           command: npm ci
-
+      - save_cache:
+          paths:
+            - ./node_modules
+          key: node-deps-{{ checksum "package-lock.json" }}
       - run:
-          name: Lint with ESLint
+          name: Run ESLint
           command: npm run lint
+
+  # Unit tests job
+  unit tests pass:
+    docker:
+      - image: cimg/node:20.5
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - node-deps-{{ checksum "package-lock.json" }}
+            - node-deps-
+      - run:
+          name: Install dependencies
+          command: npm ci
+      - save_cache:
+          paths:
+            - ./node_modules
+          key: node-deps-{{ checksum "package-lock.json" }}
+      - run:
+          name: Run unit tests
+          command: npm test
 
 workflows:
   frontend-ci:
     jobs:
-      - lint
+      - linting
+      - unit tests pass
