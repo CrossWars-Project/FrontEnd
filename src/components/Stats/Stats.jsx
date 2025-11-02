@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './Stats.css';
+import PropTypes from 'prop-types';
 import { UserAuth } from '../../context/AuthContext';
 import { getUserStats } from '../../api';
 
@@ -15,7 +16,7 @@ export default function Stats({ userStats }) {
     const fetchUserStats = async () => {
       try {
         const response = await getUserStats(user.id);
-        setStats(response);
+        setStats(response.data[0] || null);
       } catch (err) {
         console.error('Error fetching user stats:', err);
         setError('Could not load stats.');
@@ -28,13 +29,13 @@ export default function Stats({ userStats }) {
   }, [user]);
 
   const defaultStats = {
-    username: 'user',
-    streak: 90,
-    fastestSolve: 70,
-    wins: 42,
+    display_name: 'user',
+    streak_count: 0,
+    fastest_solo_time: 0,
+    num_wins: 0,
   };
 
-  const displayStats = stats || userStats || defaultStats;
+  const displayStats = stats || defaultStats;
 
   const formatTime = (timeInSeconds) => {
     const totalSeconds = Number(timeInSeconds) || 0;
@@ -64,7 +65,7 @@ export default function Stats({ userStats }) {
         <div className="stat-item">
           <h3>Streak</h3>
           <div className="stat-box">
-            <p className="stat-value">{displayStats.streak}</p>
+            <p className="stat-value">{displayStats.streak_count}</p>
             <p className="stat-label">days</p>
           </div>
         </div>
@@ -73,14 +74,14 @@ export default function Stats({ userStats }) {
           <h3>Fastest Solve</h3>
           <div className="stat-box">
             <h3>Your fastest solve is</h3>
-            <p className="stat-value">{formatTime(displayStats.fastestSolve)}</p>
+            <p className="stat-value">{formatTime(displayStats.fastest_solo_time)}</p>
           </div>
         </div>
 
         <div className="stat-item">
           <h3>Wins</h3>
           <div className="stat-box">
-            <p className="stat-value">{displayStats.wins}</p>
+            <p className="stat-value">{displayStats.num_wins}</p>
             <p className="stat-label">wins</p>
           </div>
         </div>
@@ -88,3 +89,16 @@ export default function Stats({ userStats }) {
     </div>
   );
 }
+
+Stats.propTypes = {
+  userStats: PropTypes.shape({
+    username: PropTypes.string,
+    streak: PropTypes.number,
+    fastestSolve: PropTypes.number,
+    wins: PropTypes.number,
+  }),
+};
+
+Stats.defaultProps = {
+  userStats: null,
+};
