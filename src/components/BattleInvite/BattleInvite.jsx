@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import supabase from '../utils/supabase'
+import { useState, useEffect } from 'react'
+import supabase from '../../supabaseClient'
 
 function BattleInvite(){
     const [inviteLink, setInviteLink] = useState(null)
@@ -8,7 +8,7 @@ function BattleInvite(){
     const [error, setError] = useState(null)
 
     //auto-create invite when component mounts
-    useState(() => {
+    useEffect(() => {
         createInvite()
     }, [])
 
