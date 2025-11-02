@@ -36,7 +36,9 @@ export default function Dashboard() {
 
         {/* Title */}
         <h1 className="dashboard-title">
-          Welcome to the Dashboard <strong>{ user.user_metadata?.display_name || user.email}</strong>
+          Welcome to the Dashboard
+          {' '}
+          <strong>{ user.user_metadata?.display_name || user.email}</strong>
         </h1>
 
         {/* Buttons */}
