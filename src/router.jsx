@@ -6,6 +6,7 @@ import GuestDashboard from './components/GuestDashboard/GuestDashboard';
 import BattleScreen from './components/BattleScreen/BattleScreen';
 import SoloPlay from './components/SoloPlay/SoloPlay';
 import Stats from './components/Stats/Stats';
+import BattleInvite from './components/BattleInvite/BattleInvite';
 
 const router = createBrowserRouter([
   { path: '/', element: <App /> },
@@ -15,6 +16,7 @@ const router = createBrowserRouter([
   { path: '/battle', element: <BattleScreen /> },
   { path: '/solo', element: <SoloPlay /> },
   { path: '/stats', element: <Stats /> },
+  { path: '/battleInvite', element: <BattleInvite /> },
 
 ]);
 

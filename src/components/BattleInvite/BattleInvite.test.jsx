@@ -1,5 +1,12 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import {
+  render, screen, fireEvent, waitFor,
+} from '@testing-library/react';
+import {
+  vi, describe, it, expect, beforeEach, afterEach,
+} from 'vitest';
+
+// Import component AFTER mocking
+import BattleInvite from './BattleInvite';
 
 // Use vi.hoisted() to ensure mock is available at the top level
 const mockSupabase = vi.hoisted(() => ({
@@ -10,222 +17,219 @@ const mockSupabase = vi.hoisted(() => ({
 
 // Now the mock can access mockSupabase safely
 vi.mock('../../supabaseClient', () => ({
-  default: mockSupabase
+  default: mockSupabase,
 }));
 
-// Import component AFTER mocking
-import BattleInvite from './BattleInvite';
-
-const mockFetch = vi.fn()
-const mockClipboard = { writeText: vi.fn() }
-const mockAlert = vi.fn()
+const mockFetch = vi.fn();
+const mockClipboard = { writeText: vi.fn() };
+const mockAlert = vi.fn();
 
 describe('BattleInvite Component', () => {
-    beforeEach(() => {
-        // Reset mocks before each test
-        vi.clearAllMocks();
+  beforeEach(() => {
+    // Reset mocks before each test
+    vi.clearAllMocks();
 
-        global.fetch = mockFetch
-        global.alert = mockAlert
-        Object.assign(navigator, { clipboard: mockClipboard })
+    global.fetch = mockFetch;
+    global.alert = mockAlert;
+    Object.assign(navigator, { clipboard: mockClipboard });
 
-        Object.defineProperty(window, 'location', {
-            value: { origin: 'http://localhost:5173' },
-            writable: true
-        })
-    })
+    Object.defineProperty(window, 'location', {
+      value: { origin: 'http://localhost:5173' },
+      writable: true,
+    });
+  });
 
-    afterEach(() => {
-        vi.restoreAllMocks();
-    })
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
 
-    describe('Auto-Creation on Mount', () => {
-        // === TEST NEW BEHAVIOR: Auto-creates invite on mount ===
-        it('should show loading state initially', () => {
-            // Mock delayed response to test loading state
-            let resolvePromise
-            const promise = new Promise((resolve) => { resolvePromise = resolve })
-            mockFetch.mockReturnValue(promise)
-            
-            mockSupabase.auth.getSession.mockResolvedValue({
-                data: { session: { access_token: 'valid_token' } }
-            })
+  describe('Auto-Creation on Mount', () => {
+    // === TEST NEW BEHAVIOR: Auto-creates invite on mount ===
+    it('should show loading state initially', () => {
+      // Mock delayed response to test loading state
+      let resolvePromise;
+      const promise = new Promise((resolve) => { resolvePromise = resolve; });
+      mockFetch.mockReturnValue(promise);
 
-            render(<BattleInvite />)
+      mockSupabase.auth.getSession.mockResolvedValue({
+        data: { session: { access_token: 'valid_token' } },
+      });
 
-            // Should show loading message immediately
-            expect(screen.getByText('Battle Invite')).toBeInTheDocument()
-            expect(screen.getByText('Creating your battle invite...')).toBeInTheDocument()
-            
-            // Clean up - resolve the promise
-            resolvePromise({
-                ok: true,
-                json: async () => ({ invite_token: 'test_token', battle_id: 'battle_123' })
-            })
-        })
+      render(<BattleInvite />);
 
-        it('should automatically create invite for authenticated user', async () => {
-            // Mock successful session and API call
-            mockSupabase.auth.getSession.mockResolvedValue({
-                data: { session: { access_token: 'valid_token_123' } }
-            })
+      // Should show loading message immediately
+      expect(screen.getByText('Battle Invite')).toBeInTheDocument();
+      expect(screen.getByText('Creating your battle invite...')).toBeInTheDocument();
 
-            mockFetch.mockResolvedValue({
-                ok: true,
-                json: async () => ({
-                    invite_token: 'auto_invite_abc123',
-                    battle_id: 'battle_456'
-                })
-            })
+      // Clean up - resolve the promise
+      resolvePromise({
+        ok: true,
+        json: async () => ({ invite_token: 'test_token', battle_id: 'battle_123' }),
+      });
+    });
 
-            render(<BattleInvite />)
+    it('should automatically create invite for authenticated user', async () => {
+      // Mock successful session and API call
+      mockSupabase.auth.getSession.mockResolvedValue({
+        data: { session: { access_token: 'valid_token_123' } },
+      });
 
-            // Wait for auto-creation to complete
-            await waitFor(() => {
-                expect(screen.getByText(/share this link/i)).toBeInTheDocument()
-                expect(screen.getByText('http://localhost:5173/battle/auto_invite_abc123')).toBeInTheDocument()
-                expect(screen.getByText('Copy Link')).toBeInTheDocument()
-            })
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          invite_token: 'auto_invite_abc123',
+          battle_id: 'battle_456',
+        }),
+      });
 
-            // Verify API was called automatically
-            expect(mockFetch).toHaveBeenCalledWith(
-                'http://localhost:8000/invites/create',
-                {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer valid_token_123'
-                    }
-                }
-            )
-        })
+      render(<BattleInvite />);
 
-        it('should show error when user not logged in', async () => {
-            // Mock no session
-            mockSupabase.auth.getSession.mockResolvedValue({
-                data: { session: null }
-            })
+      // Wait for auto-creation to complete
+      await waitFor(() => {
+        expect(screen.getByText(/share this link/i)).toBeInTheDocument();
+        expect(screen.getByText('http://localhost:5173/battle/auto_invite_abc123')).toBeInTheDocument();
+        expect(screen.getByText('Copy Link')).toBeInTheDocument();
+      });
 
-            render(<BattleInvite />)
+      // Verify API was called automatically
+      expect(mockFetch).toHaveBeenCalledWith(
+        'http://localhost:8000/invites/create',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer valid_token_123',
+          },
+        },
+      );
+    });
 
-            // Wait for error to appear
-            await waitFor(() => {
-                expect(screen.getByText('Error: You must be logged in to invite players to battle.')).toBeInTheDocument()
-                expect(screen.getByText('Try Again')).toBeInTheDocument()
-            })
+    it('should show error when user not logged in', async () => {
+      // Mock no session
+      mockSupabase.auth.getSession.mockResolvedValue({
+        data: { session: null },
+      });
 
-            // Verify no API call was made
-            expect(mockFetch).not.toHaveBeenCalled()
-        })
+      render(<BattleInvite />);
 
-        it('should handle API errors gracefully', async () => {
-            mockSupabase.auth.getSession.mockResolvedValue({
-                data: { session: { access_token: 'valid_token' } }
-            })
+      // Wait for error to appear
+      await waitFor(() => {
+        expect(screen.getByText('Error: You must be logged in to invite players to battle.')).toBeInTheDocument();
+        expect(screen.getByText('Try Again')).toBeInTheDocument();
+      });
 
-            mockFetch.mockResolvedValue({
-                ok: false,
-                json: async () => ({ detail: 'Invalid or expired token' })
-            })
+      // Verify no API call was made
+      expect(mockFetch).not.toHaveBeenCalled();
+    });
 
-            render(<BattleInvite />)
+    it('should handle API errors gracefully', async () => {
+      mockSupabase.auth.getSession.mockResolvedValue({
+        data: { session: { access_token: 'valid_token' } },
+      });
 
-            await waitFor(() => {
-                expect(screen.getByText('Error: Invalid or expired token')).toBeInTheDocument()
-                expect(screen.getByText('Try Again')).toBeInTheDocument()
-            })
-        })
-    })
+      mockFetch.mockResolvedValue({
+        ok: false,
+        json: async () => ({ detail: 'Invalid or expired token' }),
+      });
 
-    describe('Retry Functionality', () => {
-        it('should retry creation when Try Again button clicked', async () => {
-            // First: Mock auth failure
-            mockSupabase.auth.getSession.mockResolvedValueOnce({
-                data: { session: null }
-            })
+      render(<BattleInvite />);
 
-            render(<BattleInvite />)
+      await waitFor(() => {
+        expect(screen.getByText('Error: Invalid or expired token')).toBeInTheDocument();
+        expect(screen.getByText('Try Again')).toBeInTheDocument();
+      });
+    });
+  });
 
-            // Wait for error state
-            await waitFor(() => {
-                expect(screen.getByText('Try Again')).toBeInTheDocument()
-            })
+  describe('Retry Functionality', () => {
+    it('should retry creation when Try Again button clicked', async () => {
+      // First: Mock auth failure
+      mockSupabase.auth.getSession.mockResolvedValueOnce({
+        data: { session: null },
+      });
 
-            // Then: Mock successful auth for retry
-            mockSupabase.auth.getSession.mockResolvedValueOnce({
-                data: { session: { access_token: 'retry_token' } }
-            })
+      render(<BattleInvite />);
 
-            mockFetch.mockResolvedValue({
-                ok: true,
-                json: async () => ({ invite_token: 'retry_abc123', battle_id: 'retry_battle' })
-            })
+      // Wait for error state
+      await waitFor(() => {
+        expect(screen.getByText('Try Again')).toBeInTheDocument();
+      });
 
-            // Click retry button
-            fireEvent.click(screen.getByText('Try Again'))
+      // Then: Mock successful auth for retry
+      mockSupabase.auth.getSession.mockResolvedValueOnce({
+        data: { session: { access_token: 'retry_token' } },
+      });
 
-            // Should show success state
-            await waitFor(() => {
-                expect(screen.getByText(/share this link/i)).toBeInTheDocument()
-                expect(screen.getByText('http://localhost:5173/battle/retry_abc123')).toBeInTheDocument()
-            })
-        })
-    })
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({ invite_token: 'retry_abc123', battle_id: 'retry_battle' }),
+      });
 
-    describe('Copy Link Functionality', () => {
-        beforeEach(async () => {
-            // Setup successful invite creation
-            mockSupabase.auth.getSession.mockResolvedValue({
-                data: { session: { access_token: 'valid_token' } }
-            })
+      // Click retry button
+      fireEvent.click(screen.getByText('Try Again'));
 
-            mockFetch.mockResolvedValue({
-                ok: true,
-                json: async () => ({
-                    invite_token: 'copy_test_token',
-                    battle_id: 'battle_copy'
-                })
-            })
-        })
+      // Should show success state
+      await waitFor(() => {
+        expect(screen.getByText(/share this link/i)).toBeInTheDocument();
+        expect(screen.getByText('http://localhost:5173/battle/retry_abc123')).toBeInTheDocument();
+      });
+    });
+  });
 
-        it('should copy invite link to clipboard', async () => {
-            render(<BattleInvite />)
-            
-            // Wait for invite to be created
-            await waitFor(() => {
-                expect(screen.getByText('Copy Link')).toBeInTheDocument()
-            })
+  describe('Copy Link Functionality', () => {
+    beforeEach(async () => {
+      // Setup successful invite creation
+      mockSupabase.auth.getSession.mockResolvedValue({
+        data: { session: { access_token: 'valid_token' } },
+      });
 
-            // Click copy button
-            fireEvent.click(screen.getByText('Copy Link'))
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          invite_token: 'copy_test_token',
+          battle_id: 'battle_copy',
+        }),
+      });
+    });
 
-            // Verify clipboard and alert
-            expect(mockClipboard.writeText).toHaveBeenCalledWith(
-                'http://localhost:5173/battle/copy_test_token'
-            )
-            expect(mockAlert).toHaveBeenCalledWith('Invite link copied to clipboard!')
-        })
-    })
+    it('should copy invite link to clipboard', async () => {
+      render(<BattleInvite />);
 
-    describe('Link Accessibility', () => {
-        it('should render accessible invite link', async () => {
-            mockSupabase.auth.getSession.mockResolvedValue({
-                data: { session: { access_token: 'valid_token' } }
-            })
+      // Wait for invite to be created
+      await waitFor(() => {
+        expect(screen.getByText('Copy Link')).toBeInTheDocument();
+      });
 
-            mockFetch.mockResolvedValue({
-                ok: true,
-                json: async () => ({ invite_token: 'a11y_token', battle_id: 'battle_a11y' })
-            })
+      // Click copy button
+      fireEvent.click(screen.getByText('Copy Link'));
 
-            render(<BattleInvite />)
+      // Verify clipboard and alert
+      expect(mockClipboard.writeText).toHaveBeenCalledWith(
+        'http://localhost:5173/battle/copy_test_token',
+      );
+      expect(mockAlert).toHaveBeenCalledWith('Invite link copied to clipboard!');
+    });
+  });
 
-            await waitFor(() => {
-                const inviteLink = screen.getByRole('link')
-                expect(inviteLink).toHaveAttribute('target', '_blank')
-                expect(inviteLink).toHaveAttribute('rel', 'noopener noreferrer')
-                expect(inviteLink).toHaveAttribute('href', 'http://localhost:5173/battle/a11y_token')
-            })
-        })
-    })
-})
+  describe('Link Accessibility', () => {
+    it('should render accessible invite link', async () => {
+      mockSupabase.auth.getSession.mockResolvedValue({
+        data: { session: { access_token: 'valid_token' } },
+      });
+
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({ invite_token: 'a11y_token', battle_id: 'battle_a11y' }),
+      });
+
+      render(<BattleInvite />);
+
+      await waitFor(() => {
+        const inviteLink = screen.getByRole('link');
+        expect(inviteLink).toHaveAttribute('target', '_blank');
+        expect(inviteLink).toHaveAttribute('rel', 'noopener noreferrer');
+        expect(inviteLink).toHaveAttribute('href', 'http://localhost:5173/battle/a11y_token');
+      });
+    });
+  });
+});
