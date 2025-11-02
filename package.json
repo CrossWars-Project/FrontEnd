@@ -9,7 +9,7 @@
     "lint": "eslint . --max-warnings=0",
     "lint:fix": "eslint '**/*.{js,jsx}' --fix",
     "preview": "vite preview",
-    "test": "jest __tests__ --coverage --passWithNoTests",
+    "test": "jest __tests__ --coverage --passWithNoTests"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.76.1",
