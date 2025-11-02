@@ -6,7 +6,6 @@ import { FaCog, FaSignOutAlt, FaUserFriends, FaUser, FaHashtag } from "react-ico
 export default function GuestDashboard() {
   const navigate = useNavigate();
 
-  const handleBattlePlay = () => navigate('/battle');
   const handleSoloPlay = () => navigate('/solo');
   const handleStats = () => navigate('/stats');
   const handleSignOut = () => navigate('/');
@@ -35,17 +34,11 @@ export default function GuestDashboard() {
 
         {/* Buttons */}
         <div className="button-container">
-          <button type="button" className="primary-button" onClick={handleBattlePlay}>
+          <button type="button" className="primary-button" onClick={handleSoloPlay}>
             <FaUserFriends />
-            {' '}
-            Battle Play
-          </button>
-          <button type="button" className="secondary-button" onClick={handleSoloPlay}>
-            <FaUser />
             {' '}
             Solo Play
           </button>
-
         </div>
       </div>
     </div>
