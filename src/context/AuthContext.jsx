@@ -50,7 +50,7 @@ export function AuthContextProvider({ children }) {
     // Get current session safely
     supabase.auth.getSession().then((result) => {
       const currentSession = result.data?.session ?? null;
-      const currentUser = result.data?.session.user ?? null
+      const currentUser = result.data?.session.user ?? null;
       setSession(currentSession);
       setUser(currentUser);
     });

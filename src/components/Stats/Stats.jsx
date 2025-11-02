@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
-import "./Stats.css";
+import React, { useState, useEffect } from 'react';
+import './Stats.css';
 import { UserAuth } from '../../context/AuthContext';
-import { getUserStats } from "../../api";
+import { getUserStats } from '../../api';
 
 export default function Stats({ userStats }) {
   const { user } = UserAuth();
@@ -17,8 +17,8 @@ export default function Stats({ userStats }) {
         const response = await getUserStats(user.id);
         setStats(response);
       } catch (err) {
-        console.error("Error fetching user stats:", err);
-        setError("Could not load stats.");
+        console.error('Error fetching user stats:', err);
+        setError('Could not load stats.');
       } finally {
         setLoading(false);
       }
@@ -28,7 +28,7 @@ export default function Stats({ userStats }) {
   }, [user]);
 
   const defaultStats = {
-    username: "user",
+    username: 'user',
     streak: 90,
     fastestSolve: 70,
     wins: 42,
@@ -41,8 +41,8 @@ export default function Stats({ userStats }) {
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
     return minutes > 0
-      ? `${minutes}:${seconds.toString().padStart(2, "0")}`
-      : `:${seconds.toString().padStart(2, "0")}`;
+      ? `${minutes}:${seconds.toString().padStart(2, '0')}`
+      : `:${seconds.toString().padStart(2, '0')}`;
   };
 
   if (loading) return <p>Loading stats...</p>;
@@ -55,7 +55,9 @@ export default function Stats({ userStats }) {
       </div>
 
       <h2 className="stats-title">
-        <strong>{user.user_metadata?.display_name}</strong> Stats
+        <strong>{user.user_metadata?.display_name}</strong>
+        {' '}
+        Stats
       </h2>
 
       <div className="stats-grid">

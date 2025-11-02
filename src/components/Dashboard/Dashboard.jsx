@@ -16,7 +16,7 @@ import { UserAuth } from '../../context/AuthContext';
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const {user} = UserAuth();
+  const { user } = UserAuth();
 
   const handleBattlePlay = () => navigate('/battle');
   const handleSoloPlay = () => navigate('/solo');
@@ -43,7 +43,10 @@ export default function Dashboard() {
         </div>
 
         {/* Title */}
-        <h1 className="dashboard-title">Welcome to the Dashboard <strong>{user.user_metadata?.display_name || user.email}</strong></h1>
+        <h1 className="dashboard-title">
+          Welcome to the Dashboard
+          <strong>{user.user_metadata?.display_name || user.email}</strong>
+        </h1>
 
         {/* Buttons */}
         <div className="button-container">
