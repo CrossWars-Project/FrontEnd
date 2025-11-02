@@ -89,16 +89,3 @@ export default function Stats({ userStats }) {
     </div>
   );
 }
-
-Stats.propTypes = {
-  userStats: PropTypes.shape({
-    username: PropTypes.string,
-    streak: PropTypes.number,
-    fastestSolve: PropTypes.number,
-    wins: PropTypes.number,
-  }),
-};
-
-Stats.defaultProps = {
-  userStats: null,
-};
