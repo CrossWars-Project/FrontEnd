@@ -1,7 +1,9 @@
-import React from "react";
-import "./GuestDashboard.css";
-import { useNavigate } from "react-router-dom";
-import { FaCog, FaSignOutAlt, FaUserFriends, FaUser, FaHashtag } from "react-icons/fa";
+import React from 'react';
+import './GuestDashboard.css';
+import { useNavigate } from 'react-router-dom';
+import {
+  FaCog, FaSignOutAlt, FaUserFriends, FaUser, FaHashtag,
+} from 'react-icons/fa';
 
 export default function GuestDashboard() {
   const navigate = useNavigate();
