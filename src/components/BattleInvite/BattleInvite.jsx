@@ -47,6 +47,7 @@ function BattleInvite(){
 
             //build invite link
             const link = `${window.location.origin}/battle/${data.invite_token}`
+            const battleId = data.battle_id // might need later for multiplayer games (?)
             
             console.log('Invite Link:', link)//for testing show invite link in console
 
