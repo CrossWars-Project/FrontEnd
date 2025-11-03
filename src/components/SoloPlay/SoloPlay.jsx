@@ -34,7 +34,7 @@ export default function SoloPlay() {
   // ---------------- Fetch Crossword ----------------
   useEffect(() => {
     if (crosswordFetched) return; // prevent double generation
-    async function fetchCrossword(theme = "animals") {
+    async function fetchCrossword(theme = "technology") {
       setLoading(true);
       try {
         const res = await fetch("http://127.0.0.1:8000/crossword/generate", {
