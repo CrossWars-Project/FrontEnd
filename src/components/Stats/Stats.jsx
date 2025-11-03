@@ -3,6 +3,7 @@ import './Stats.css';
 import PropTypes from 'prop-types';
 import { UserAuth } from '../../context/AuthContext';
 import { getUserStats } from '../../api';
+import { formatTime } from '../../utils/formatTime';
 
 export default function Stats({ userStats }) {
   const { user } = UserAuth();
@@ -36,15 +37,6 @@ export default function Stats({ userStats }) {
   };
 
   const displayStats = stats || defaultStats;
-
-  const formatTime = (timeInSeconds) => {
-    const totalSeconds = Number(timeInSeconds) || 0;
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return minutes > 0
-      ? `${minutes}:${seconds.toString().padStart(2, '0')}`
-      : `:${seconds.toString().padStart(2, '0')}`;
-  };
 
   if (loading) return <p>Loading stats...</p>;
   if (error) return <p>{error}</p>;
