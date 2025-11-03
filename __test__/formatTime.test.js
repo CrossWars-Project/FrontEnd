@@ -1,4 +1,4 @@
-import { formatTime } from "../src/utils/formatTime";
+import { formatTime } from '../src/utils/formatTime';
 
 describe('formatTime', () => {
   test('formats seconds less than a minute', () => {
