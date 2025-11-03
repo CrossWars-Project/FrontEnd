@@ -1,7 +1,7 @@
 version: 2.1
 
 jobs:
-  # Linting job
+  # Linting job-- enforces that code adheres to airbnb eslint config style guidelines
   linting:
     docker:
       - image: cimg/node:20.5
@@ -22,7 +22,7 @@ jobs:
           name: Run ESLint
           command: npm run lint
 
-  # Unit tests job
+  # Unit tests job-- enforces that all tests in the __test__ folder must pass before merge
   unit tests pass:
     docker:
       - image: cimg/node:20.5
