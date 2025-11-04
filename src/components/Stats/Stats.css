@@ -46,8 +46,9 @@
 
 .stat-item h3 {
   font-size: 18px;
-  font-weight: 600;
+  font-weight: 700;
   margin-bottom: 16px;
+  color: #000;
 }
 
 .stat-box {
@@ -67,10 +68,13 @@
   font-weight: 700;
   font-style: italic;
   margin: 0;
+  color: #000;
 }
 
 .stat-label {
   font-size: 14px;
   font-style: italic;
+  font-weight: 600;
   margin-top: 4px;
+  color: #000;
 }
