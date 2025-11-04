@@ -10,7 +10,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { user } = UserAuth();
 
-  const handleBattlePlay = () => navigate('/battle');
+  const handleBattlePlay = () => navigate('/battleInvite');
   const handleSoloPlay = () => navigate('/solo');
   const handleStats = () => navigate('/stats');
   const handleSignOut = () => navigate('/');
