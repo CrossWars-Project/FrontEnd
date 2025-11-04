@@ -1,5 +1,6 @@
 import formatTime from '../src/utils/formatTime';
 //tests to make sure we are converting a number of seconds to minutes and seconds correctly
+//this is used on the stats page.
 describe('formatTime', () => {
   test('formats seconds less than a minute', () => {
     expect(formatTime(0)).toBe(':00');
