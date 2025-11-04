@@ -136,23 +136,3 @@
   background-color: #333;
 }
 
-.secondary-button {
-  width: 100%;
-  padding: 14px;
-  font-size: 16px;
-  font-weight: 500;
-  background-color: #d0d0d0;
-  color: #000;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-}
-
-.secondary-button:hover {
-  background-color: #bfbfbf;
-}
-

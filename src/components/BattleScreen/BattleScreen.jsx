@@ -5,7 +5,7 @@ import { FaSignOutAlt, FaClock } from 'react-icons/fa';
 
 const GRID_SIZE = 5;
 
-export default function BattleScreen() {
+export default function BattlePlay() {
   const navigate = useNavigate();
   const handleSignOut = () => navigate('/guestDashboard');
 
@@ -61,7 +61,6 @@ export default function BattleScreen() {
 
     const newGrid = grid.map((r) => [...r]);
     const letter = value.slice(-1).toUpperCase();
-
     if (/^[A-Z]$/.test(letter)) {
       newGrid[row][col] = letter;
 
@@ -77,13 +76,10 @@ export default function BattleScreen() {
     } else if (value === '') {
       newGrid[row][col] = '';
     }
-
     setGrid(newGrid);
   };
 
-  // Win check runs AFTER grid updates
-  // If it's wrong, no indication - user must figure out the mistake.
-  // Do we want an option to check?
+  // ---------------- Win Check ----------------
   useEffect(() => {
     const allCorrect = solution.every((row, r) => row.every(
       (cell, c) => cell === ' ' || grid[r][c]?.toUpperCase() === cell,
@@ -193,7 +189,7 @@ export default function BattleScreen() {
       </div>
 
       <div className="battle-body">
-        {/* Crossword grid */}
+        {/* Crossword Grid */}
         <div className="crossword-container">
           {grid.map((row, rIdx) => (
             <div key={rIdx} className="row">
@@ -206,7 +202,7 @@ export default function BattleScreen() {
                 >
                   {solution[rIdx][cIdx] !== ' ' && (
                     <>
-                      {numberedCells[rIdx][cIdx] && (
+                      {numberedCells[rIdx]?.[cIdx] && (
                         <span className="cell-number">{numberedCells[rIdx][cIdx]}</span>
                       )}
                       <input
@@ -214,7 +210,7 @@ export default function BattleScreen() {
                         type="text"
                         maxLength="1"
                         className="cell"
-                        value={cell}
+                        value={cell || ""}
                         onChange={(e) => handleInput(rIdx, cIdx, e.target.value)}
                       />
                     </>
@@ -225,18 +221,23 @@ export default function BattleScreen() {
           ))}
         </div>
 
-        {/* Placeholder clues */}
+        {/* Clues */}
         <div className="clues-container">
           <h3>Across</h3>
           <ul>
-            {placeholderClues.map((clue, i) => (
-              <li key={i}>{clue}</li>
+            {cluesAcross.map((clue) => (
+              <li key={`across-${clue.number}`}>
+                <strong>{clue.number}.</strong> {clue.text}
+              </li>
             ))}
           </ul>
+
           <h3>Down</h3>
           <ul>
-            {placeholderClues.map((clue, i) => (
-              <li key={i}>{clue}</li>
+            {cluesDown.map((clue) => (
+              <li key={`down-${clue.number}`}>
+                <strong>{clue.number}.</strong> {clue.text}
+              </li>
             ))}
           </ul>
         </div>
