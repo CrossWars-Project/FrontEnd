@@ -6,4 +6,7 @@ export default {
   },
   setupFilesAfterEnv: ['@testing-library/jest-dom'],
   testMatch: ['**/?(*.)+(test).[jt]sx'], // finds e.g. BattleInvite.test.jsx
+  moduleNameMapper: {
+    '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
+  },
 };
