@@ -232,4 +232,56 @@ describe('BattleInvite Component', () => {
       });
     });
   });
+
+  describe('Parent callbacks', () => {
+    it('should call onCreated with invite info after successful creation', async () => {
+      const mockOnCreated = vi.fn();
+
+      mockSupabase.auth.getSession.mockResolvedValue({
+        data: { session: { access_token: 'valid_token_onCreated' } },
+      });
+
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({ invite_token: 'created_token', battle_id: 'battle_created' }),
+      });
+
+      render(<BattleInvite onCreated={mockOnCreated} />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Copy Link')).toBeInTheDocument();
+      });
+
+      // Expect onCreated was called with the expected shape
+      expect(mockOnCreated).toHaveBeenCalledTimes(1);
+      const arg = mockOnCreated.mock.calls[0][0];
+      expect(arg).toHaveProperty('inviteLink', 'http://localhost:5173/battle/created_token');
+      expect(arg).toHaveProperty('inviteToken', 'created_token');
+      expect(arg).toHaveProperty('battleId', 'battle_created');
+    });
+
+    it('should render Close button and call onClose when provided', async () => {
+      const mockOnClose = vi.fn();
+
+      mockSupabase.auth.getSession.mockResolvedValue({
+        data: { session: { access_token: 'valid_token_close' } },
+      });
+
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({ invite_token: 'close_token', battle_id: 'battle_close' }),
+      });
+
+      render(<BattleInvite onClose={mockOnClose} />);
+
+      // wait for success state
+      await waitFor(() => {
+        expect(screen.getByText('Copy Link')).toBeInTheDocument();
+        expect(screen.getByText('Close')).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByText('Close'));
+      expect(mockOnClose).toHaveBeenCalledTimes(1);
+    });
+  });
 });

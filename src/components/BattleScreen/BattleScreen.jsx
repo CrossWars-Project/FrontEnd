@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './BattleScreen.css';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { FaSignOutAlt, FaClock } from 'react-icons/fa';
 
 const GRID_SIZE = 5;
@@ -99,6 +99,8 @@ export default function BattlePlay() {
     (opponentFilled / (GRID_SIZE * GRID_SIZE)) * 100,
   );
 
+  const { inviteToken } = useParams();
+
   // Should take a list of strings in and then need to fix the logic to display
   // Or can I just display all the clues?
   const placeholderClues = [
@@ -108,6 +110,8 @@ export default function BattlePlay() {
     '4. Placeholder clue',
     '5. Placeholder clue',
   ];
+  const cluesAcross = placeholderClues;
+  const cluesDown = placeholderClues;
 
   // Determine numbering for crossword cells
   const numbering = solution.map((row, rIdx) => row.map((cell, cIdx) => {
@@ -210,7 +214,7 @@ export default function BattlePlay() {
                         type="text"
                         maxLength="1"
                         className="cell"
-                        value={cell || ""}
+                        value={cell || ''}
                         onChange={(e) => handleInput(rIdx, cIdx, e.target.value)}
                       />
                     </>
@@ -227,7 +231,12 @@ export default function BattlePlay() {
           <ul>
             {cluesAcross.map((clue) => (
               <li key={`across-${clue.number}`}>
-                <strong>{clue.number}.</strong> {clue.text}
+                <strong>
+                  {clue.number}
+                  .
+                </strong>
+                {' '}
+                {clue.text}
               </li>
             ))}
           </ul>
@@ -236,7 +245,12 @@ export default function BattlePlay() {
           <ul>
             {cluesDown.map((clue) => (
               <li key={`down-${clue.number}`}>
-                <strong>{clue.number}.</strong> {clue.text}
+                <strong>
+                  {clue.number}
+                  .
+                </strong>
+                {' '}
+                {clue.text}
               </li>
             ))}
           </ul>
