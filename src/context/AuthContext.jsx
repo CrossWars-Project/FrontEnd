@@ -76,12 +76,18 @@ export function AuthContextProvider({ children }) {
     children: PropTypes.node.isRequired,
   };
 
+  const setGuestMode = () => {
+    setSession(null);
+    setUser(null);
+  };
+
   const value = useMemo(() => ({
     session,
     user,
     signUpNewUser,
     loginUser,
     signOut,
+    setGuestMode,
   }), [session, user]);
 
   return (
