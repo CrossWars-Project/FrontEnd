@@ -14,6 +14,7 @@ const router = createBrowserRouter([
   { path: '/dashboard', element: <Dashboard /> },
   { path: '/guestDashboard', element: <GuestDashboard /> },
   { path: '/battle', element: <BattleScreen /> },
+  { path: '/battle/:inviteToken', element: <BattleScreen /> },
   { path: '/solo', element: <SoloPlay /> },
   { path: '/stats', element: <Stats /> },
   { path: '/battleInvite', element: <BattleInvite /> },

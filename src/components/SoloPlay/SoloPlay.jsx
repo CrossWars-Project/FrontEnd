@@ -42,42 +42,37 @@ export default function SoloPlay() {
   // ---------------- Fetch Crossword ----------------
   useEffect(() => {
     if (crosswordFetched) return; // prevent double generation
-    async function fetchCrossword(theme = "technology") {
+    async function fetchCrossword(theme = 'technology') {
       setLoading(true);
       try {
-        const res = await fetch("http://127.0.0.1:8000/crossword/generate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+        const res = await fetch('http://127.0.0.1:8000/crossword/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ theme }),
         });
-        if (!res.ok) throw new Error("Failed to fetch crossword");
+        if (!res.ok) throw new Error('Failed to fetch crossword');
 
         const data = await res.json();
         const crossword = data.data;
-        if (!crossword || !crossword.grid) throw new Error("No grid returned");
+        if (!crossword || !crossword.grid) throw new Error('No grid returned');
 
-        const formattedGrid = crossword.grid.map((row) =>
-          row.map((cell) => (cell === "-" ? " " : cell))
-        );
+        const formattedGrid = crossword.grid.map((row) => row.map((cell) => (cell === '-' ? ' ' : cell)));
 
         // --- Numbering Logic ---
         let num = 1;
-        const numbered = formattedGrid.map((row, rIdx) =>
-          row.map((cell, cIdx) => {
-            if (cell === " ") return null; // black square
-            const leftBlack = cIdx === 0 || formattedGrid[rIdx][cIdx - 1] === " ";
-            const rightWhite = cIdx < GRID_SIZE - 1 && formattedGrid[rIdx][cIdx + 1] !== " ";
-            const startsAcross = leftBlack && rightWhite;
+        const numbered = formattedGrid.map((row, rIdx) => row.map((cell, cIdx) => {
+          if (cell === ' ') return null; // black square
+          const leftBlack = cIdx === 0 || formattedGrid[rIdx][cIdx - 1] === ' ';
+          const rightWhite = cIdx < GRID_SIZE - 1 && formattedGrid[rIdx][cIdx + 1] !== ' ';
+          const startsAcross = leftBlack && rightWhite;
 
-            const topBlack = rIdx === 0 || formattedGrid[rIdx - 1][cIdx] === " ";
-            const bottomWhite = rIdx < GRID_SIZE - 1 && formattedGrid[rIdx + 1][cIdx] !== " ";
-            const startsDown = topBlack && bottomWhite;
+          const topBlack = rIdx === 0 || formattedGrid[rIdx - 1][cIdx] === ' ';
+          const bottomWhite = rIdx < GRID_SIZE - 1 && formattedGrid[rIdx + 1][cIdx] !== ' ';
+          const startsDown = topBlack && bottomWhite;
 
-            if (startsAcross || startsDown) return num++;
-            return null;
-          })
-        );
-
+          if (startsAcross || startsDown) return num++;
+          return null;
+        }));
 
         // --- Build Across and Down clue numbers from the grid ---
         const acrossNumbers = [];
@@ -89,37 +84,32 @@ export default function SoloPlay() {
             if (!numVal) continue;
 
             // Across start: cell is non-space, left is blank/outside, right is a letter
-            const startsAcross =
-              (c === 0 || formattedGrid[r][c - 1] === " ") &&
-              c < GRID_SIZE - 1 &&
-              formattedGrid[r][c + 1] !== " ";
+            const startsAcross = (c === 0 || formattedGrid[r][c - 1] === ' ')
+              && c < GRID_SIZE - 1
+              && formattedGrid[r][c + 1] !== ' ';
             if (startsAcross) acrossNumbers.push(numVal);
 
             // Down start: cell is non-space, top is blank/outside, below is a letter
-            const startsDown =
-              (r === 0 || formattedGrid[r - 1][c] === " ") &&
-              r < GRID_SIZE - 1 &&
-              formattedGrid[r + 1][c] !== " ";
+            const startsDown = (r === 0 || formattedGrid[r - 1][c] === ' ')
+              && r < GRID_SIZE - 1
+              && formattedGrid[r + 1][c] !== ' ';
             if (startsDown) downNumbers.push(numVal);
           }
         }
 
         // Now attach backend clues in the *same order*
-        const numberedAcross =
-          crossword.clues_across?.map((clue, i) => ({
-            number: acrossNumbers[i],
-            text: clue,
-          })) || [];
+        const numberedAcross = crossword.clues_across?.map((clue, i) => ({
+          number: acrossNumbers[i],
+          text: clue,
+        })) || [];
 
-        const numberedDown =
-          crossword.clues_down?.map((clue, i) => ({
-            number: downNumbers[i],
-            text: clue,
-          })) || [];
-
+        const numberedDown = crossword.clues_down?.map((clue, i) => ({
+          number: downNumbers[i],
+          text: clue,
+        })) || [];
 
         setSolution(formattedGrid);
-        setGrid(formattedGrid.map((r) => r.map((c) => (c === " " ? null : ""))));
+        setGrid(formattedGrid.map((r) => r.map((c) => (c === ' ' ? null : ''))));
         setCluesAcross(numberedAcross);
         setCluesDown(numberedDown);
         setNumberedCells(numbered);
@@ -127,7 +117,7 @@ export default function SoloPlay() {
         setLoading(false);
         setCrosswordFetched(true);
       } catch (err) {
-        console.error("Error fetching crossword:", err);
+        console.error('Error fetching crossword:', err);
         setLoading(false);
       }
     }
@@ -145,13 +135,13 @@ export default function SoloPlay() {
 
   // ---------------- Handle Input ----------------
   const handleInput = (row, col, value) => {
-    if (solution[row][col] === " ") return;
+    if (solution[row][col] === ' ') return;
     const newGrid = grid.map((r) => [...r]);
     const letter = value.slice(-1).toUpperCase();
     if (/^[A-Z]$/.test(letter)) {
       newGrid[row][col] = letter;
       let nextCol = col + 1;
-      while (nextCol < GRID_SIZE && solution[row][nextCol] === " ") nextCol++;
+      while (nextCol < GRID_SIZE && solution[row][nextCol] === ' ') nextCol++;
       if (nextCol < GRID_SIZE) {
         const nextInput = document.getElementById(`cell-${row}-${nextCol}`);
         if (nextInput) nextInput.focus();
@@ -165,15 +155,13 @@ export default function SoloPlay() {
   // ---------------- Win Check ----------------
   useEffect(() => {
     if (!solution.length) return;
-    const allCorrect = solution.every((row, r) =>
-      row.every((cell, c) => cell === " " || grid[r][c]?.toUpperCase() === cell)
-    );
+    const allCorrect = solution.every((row, r) => row.every((cell, c) => cell === ' ' || grid[r][c]?.toUpperCase() === cell));
     if (allCorrect && !isCompleted) setIsCompleted(true);
   }, [grid, solution, isCompleted]);
 
   // ---------------- Progress ----------------
-  const userFilled = grid.flat().filter((c) => c && c !== "").length;
-  const totalLetters = solution.flat().filter((c) => c !== " ").length;
+  const userFilled = grid.flat().filter((c) => c && c !== '').length;
+  const totalLetters = solution.flat().filter((c) => c !== ' ').length;
   const userProgress = solution.length ? Math.round((userFilled / totalLetters) * 100) : 0;
 
   // ---------------- Loading ----------------
@@ -197,7 +185,9 @@ export default function SoloPlay() {
           Quit
         </button>
         <div className="timer-display">
-          <FaClock /> {formatTime(elapsed)}
+          <FaClock />
+          {' '}
+          {formatTime(elapsed)}
         </div>
       </div>
 
@@ -209,7 +199,7 @@ export default function SoloPlay() {
               {row.map((cell, cIdx) => (
                 <div
                   key={cIdx}
-                  className={`cell-wrapper ${solution[rIdx][cIdx] === " " ? "black-cell" : ""}`}
+                  className={`cell-wrapper ${solution[rIdx][cIdx] === ' ' ? 'black-cell' : ''}`}
                 >
                   {solution[rIdx][cIdx] !== ' ' && (
                     <>
@@ -221,7 +211,7 @@ export default function SoloPlay() {
                         type="text"
                         maxLength="1"
                         className="cell"
-                        value={cell || ""}
+                        value={cell || ''}
                         onChange={(e) => handleInput(rIdx, cIdx, e.target.value)}
                       />
                     </>
@@ -238,7 +228,12 @@ export default function SoloPlay() {
           <ul>
             {cluesAcross.map((clue) => (
               <li key={`across-${clue.number}`}>
-                <strong>{clue.number}.</strong> {clue.text}
+                <strong>
+                  {clue.number}
+                  .
+                </strong>
+                {' '}
+                {clue.text}
               </li>
             ))}
           </ul>
@@ -247,7 +242,12 @@ export default function SoloPlay() {
           <ul>
             {cluesDown.map((clue) => (
               <li key={`down-${clue.number}`}>
-                <strong>{clue.number}.</strong> {clue.text}
+                <strong>
+                  {clue.number}
+                  .
+                </strong>
+                {' '}
+                {clue.text}
               </li>
             ))}
           </ul>
@@ -270,7 +270,10 @@ export default function SoloPlay() {
 
             <div className="popup-content">
               <p className="popup-time">
-                You finished in <strong>{formatTime(elapsed)}</strong>!
+                You finished in
+                {' '}
+                <strong>{formatTime(elapsed)}</strong>
+                !
               </p>
             </div>
 
