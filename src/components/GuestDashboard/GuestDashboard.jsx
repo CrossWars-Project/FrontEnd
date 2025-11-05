@@ -4,12 +4,16 @@ import { useNavigate } from 'react-router-dom';
 import {
   FaCog, FaSignOutAlt, FaUserFriends, FaUser, FaHashtag,
 } from 'react-icons/fa';
+import { UserAuth } from '../../context/AuthContext';
 
 export default function GuestDashboard() {
   const navigate = useNavigate();
+  const { setGuestMode } = UserAuth();
 
-  const handleSoloPlay = () => navigate('/solo');
-  const handleStats = () => navigate('/stats');
+  const handleSoloPlay = () => {
+    setGuestMode();
+    navigate('/solo');
+  };
   const handleSignOut = () => navigate('/');
 
   return (
