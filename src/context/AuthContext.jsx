@@ -3,6 +3,7 @@ import {
 } from 'react';
 import PropTypes from 'prop-types';
 import supabase from '../supabaseClient';
+import setGuestMode from '../utils/setGuestMode';
 
 const AuthContext = createContext();
 
@@ -76,10 +77,7 @@ export function AuthContextProvider({ children }) {
     children: PropTypes.node.isRequired,
   };
 
-  const setGuestMode = () => {
-    setSession(null);
-    setUser(null);
-  };
+  const handleGuestMode = () => setGuestMode(setUser, setSession);
 
   const value = useMemo(() => ({
     session,
@@ -87,7 +85,7 @@ export function AuthContextProvider({ children }) {
     signUpNewUser,
     loginUser,
     signOut,
-    setGuestMode,
+    setGuestMode: handleGuestMode,
   }), [session, user]);
 
   return (
