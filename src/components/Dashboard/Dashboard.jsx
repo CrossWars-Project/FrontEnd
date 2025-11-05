@@ -1,16 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './Dashboard.css';
 import { useNavigate } from 'react-router-dom';
 import {
   FaCog, FaSignOutAlt, FaUserFriends, FaUser, FaHashtag,
 } from 'react-icons/fa';
 import { UserAuth } from '../../context/AuthContext';
+import BattleInvite from '../BattleInvite/BattleInvite';
+import '../BattleInvite/BattleInvite.css';
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user } = UserAuth();
 
-  const handleBattlePlay = () => navigate('/battle');
+  const [showInvite, setShowInvite] = useState(false);
+  const [inviteInfo, setInviteInfo] = useState(null);
+  const handleBattlePlay = () => setShowInvite(true);
   const handleSoloPlay = () => navigate('/solo');
   const handleStats = () => navigate('/stats');
   const handleSignOut = () => navigate('/');
@@ -38,7 +42,7 @@ export default function Dashboard() {
         <h1 className="dashboard-title">
           Welcome to the Dashboard
           {' '}
-          <strong>{ user.user_metadata?.display_name || user.email}</strong>
+          <strong>{ user?.user_metadata?.display_name || user?.email || 'Guest'}</strong>
         </h1>
 
         {/* Buttons */}
@@ -60,6 +64,35 @@ export default function Dashboard() {
           </button>
         </div>
       </div>
+
+      {showInvite && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <button className="modal-close" onClick={() => setShowInvite(false)}>×</button>
+            <BattleInvite
+              onClose={() => setShowInvite(false)}
+              onCreated={(info) => {
+                setInviteInfo(info);
+              }}
+            />
+
+            {inviteInfo?.inviteToken && (
+              <div>
+                <button
+                  type="button"
+                  className="primary-button"
+                  onClick={() => {
+                    setShowInvite(false);
+                    navigate(`/battle/${inviteInfo.inviteToken}`);
+                  }}
+                >
+                  Enter Battle
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
