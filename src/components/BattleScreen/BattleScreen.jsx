@@ -7,7 +7,7 @@ const GRID_SIZE = 5;
 
 export default function BattlePlay() {
   const navigate = useNavigate();
-  const handleSignOut = () => navigate('/guestDashboard');
+  const handleSignOut = () => navigate('/dashboard');
 
   // Crossword solution grid (spaces = black squares)
   // Format is " " for a black square
@@ -267,7 +267,7 @@ export default function BattlePlay() {
               {formatTime(elapsed)}
               !
             </p>
-            <button onClick={() => navigate('/guestDashboard')}>
+            <button onClick={() => navigate('/dashboard')}>
               Return to Dashboard
             </button>
           </div>
