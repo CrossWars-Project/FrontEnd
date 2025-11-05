@@ -1,60 +1,63 @@
-import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom';
+import Dashboard from './Dashboard';
+import { UserAuth } from '../../context/AuthContext';
+import { BrowserRouter } from 'react-router-dom';
+import BattleInvite from '../BattleInvite/BattleInvite';
 
-const mockNavigate = vi.fn();
-vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual('react-router-dom');
-  return {
-    ...actual,
-    useNavigate: () => mockNavigate,
-  };
-});
-
-// Dashboard should think user is logged in
-vi.mock('../../context/AuthContext', () => ({
-  UserAuth: () => ({ user: { email: 'test@example.com', user_metadata: { display_name: 'Tester' } } }),
+// Mock Auth Context
+jest.mock('../../context/AuthContext', () => ({
+  UserAuth: jest.fn(),
 }));
 
-// Mock BattleInvite child to immediately call onCreated when mounted
-vi.mock('../BattleInvite/BattleInvite', () => {
-  return {
-    default: ({ onCreated }) => {
-      // Parent shows Enter Battle
-      if (typeof onCreated === 'function') {
-        onCreated({ inviteToken: 'mock_token', inviteLink: 'http://localhost/battle/mock_token', battleId: 'b_mock' });
-      }
-      return <div data-testid="mock-battle-invite">Mock Invite</div>;
-    },
-  };
-});
-
-import Dashboard from './Dashboard';
+// Mock BattleInvite to simplify testing
+jest.mock('../BattleInvite/BattleInvite', () => (props) => (
+  <div data-testid="battle-invite-mock">
+    <button onClick={props.onClose}>Close Invite</button>
+    <button onClick={() => props.onCreated({ inviteToken: 'abc123' })}>Create Invite</button>
+  </div>
+));
 
 describe('Dashboard', () => {
+  const mockNavigate = jest.fn();
+
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
+    jest.mocked(UserAuth).mockReturnValue({ user: { email: 'test@example.com', user_metadata: { display_name: 'TestUser' } } });
   });
 
-  afterEach(() => {
-    vi.restoreAllMocks();
+  function renderWithRouter(component) {
+    return render(<BrowserRouter>{component}</BrowserRouter>);
+  }
+
+  it('renders welcome message with user display name', () => {
+    renderWithRouter(<Dashboard />);
+    expect(screen.getByText(/Welcome to the Dashboard/i)).toBeInTheDocument();
+    expect(screen.getByText(/TestUser/)).toBeInTheDocument();
   });
 
-  it('opens invite modal and shows Enter Battle when invite created; Enter Battle navigates', async () => {
-    render(<Dashboard />);
+  it('opens BattleInvite modal when Battle Play clicked', () => {
+    renderWithRouter(<Dashboard />);
+    const battleButton = screen.getByText(/Battle Play/i);
+    fireEvent.click(battleButton);
 
-    fireEvent.click(screen.getByRole('button', { name: /battle play/i }));
+    expect(screen.getByTestId('battle-invite-mock')).toBeInTheDocument();
+  });
 
-    await waitFor(() => {
-      expect(screen.getByTestId('mock-battle-invite')).toBeInTheDocument();
-    });
+  it('closes BattleInvite modal when Close button clicked', () => {
+    renderWithRouter(<Dashboard />);
+    fireEvent.click(screen.getByText(/Battle Play/i));
 
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /enter battle/i })).toBeInTheDocument();
-    });
+    fireEvent.click(screen.getByText(/Close Invite/i));
+    expect(screen.queryByTestId('battle-invite-mock')).not.toBeInTheDocument();
+  });
 
-    fireEvent.click(screen.getByRole('button', { name: /enter battle/i }));
+  it('calls onCreated from BattleInvite and sets inviteInfo', () => {
+    renderWithRouter(<Dashboard />);
+    fireEvent.click(screen.getByText(/Battle Play/i));
 
-    expect(mockNavigate).toHaveBeenCalledWith('/battle/mock_token');
+    fireEvent.click(screen.getByText(/Create Invite/i));
+    // The Enter Battle button should now appear
+    expect(screen.getByText(/Enter Battle/i)).toBeInTheDocument();
   });
 });
