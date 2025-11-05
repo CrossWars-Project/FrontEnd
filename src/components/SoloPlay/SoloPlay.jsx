@@ -13,7 +13,7 @@ export default function SoloPlay() {
   if (user && session) {
     navigate('/dashboard'); // logged-in dashboard
   } else {
-    navigate('/guest-dashboard'); // guest dashboard
+    navigate('/guestDashboard'); // guest dashboard
   }
 };
 
@@ -281,7 +281,7 @@ export default function SoloPlay() {
                   if (user && session) {
                     navigate("/dashboard");
                   } else {
-                    navigate("/guest-dashboard");
+                    navigate("/guestDashboard");
                   }
                 }}
               >
