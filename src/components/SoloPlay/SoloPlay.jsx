@@ -2,12 +2,20 @@ import React, { useState, useEffect } from "react";
 import "./SoloPlay.css";
 import { useNavigate } from "react-router-dom";
 import { FaSignOutAlt, FaClock } from "react-icons/fa";
+import { UserAuth } from "../../context/AuthContext";
 
 const GRID_SIZE = 5;
 
 export default function SoloPlay() {
+  const { user, session } = UserAuth();
   const navigate = useNavigate();
-  const handleSignOut = () => navigate('/guestDashboard');
+  const handleSignOut = () => {
+  if (user && session) {
+    navigate('/dashboard'); // logged-in dashboard
+  } else {
+    navigate('/guest-dashboard'); // guest dashboard
+  }
+};
 
   const formatTime = (secs) => {
     const m = Math.floor(secs / 60);
@@ -269,7 +277,13 @@ export default function SoloPlay() {
             <div className="popup-actions">
               <button
                 className="popup-button"
-                onClick={() => navigate("/guestDashboard")}
+                onClick={() => {
+                  if (user && session) {
+                    navigate("/dashboard");
+                  } else {
+                    navigate("/guest-dashboard");
+                  }
+                }}
               >
                 Return to Dashboard
               </button>
