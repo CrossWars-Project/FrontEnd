@@ -33,6 +33,11 @@ export const getUserStats = async (userId) => {
   return res.data;
 };
 
+export const updateUserStats = async (userStats) => {
+  const res = await API.put(`/stats/update_user_stats/`, userStats);
+  return res.data;
+};
+
 export const loginUser = async (credentials) => {
   const res = await API.post('/login', credentials); // backend login route
   return res.data;
