@@ -3,6 +3,7 @@ import "./SoloPlay.css";
 import { useNavigate } from "react-router-dom";
 import { FaSignOutAlt, FaClock } from "react-icons/fa";
 import { UserAuth } from "../../context/AuthContext";
+import { updateUserStats } from "../../api";
 
 const GRID_SIZE = 5;
 
@@ -38,6 +39,9 @@ export default function SoloPlay() {
 
   // ---------------- Completion ----------------
   const [isCompleted, setIsCompleted] = useState(false);
+
+  // ---------------- Send Stats ----------------
+  const [hasSentStats, setHasSentStats] = useState(false);
 
   // ---------------- Fetch Crossword ----------------
   useEffect(() => {
@@ -158,6 +162,28 @@ export default function SoloPlay() {
     const allCorrect = solution.every((row, r) => row.every((cell, c) => cell === ' ' || grid[r][c]?.toUpperCase() === cell));
     if (allCorrect && !isCompleted) setIsCompleted(true);
   }, [grid, solution, isCompleted]);
+
+  // ---------------- Send Stats ---------------
+  useEffect(() => {
+  if (isCompleted && user && session && !hasSentStats) {
+    setHasSentStats(true); // prevent multiple calls
+
+    (async () => {
+      try {
+        await updateUserStats({
+          user_id: user.id,
+          num_solo_games: 1,        // backend handles increment / better logic
+          num_wins: 1,
+          fastest_solo_time: elapsed,
+          dt_last_seen: new Date().toISOString(),
+        });
+        console.log("Stats update sent successfully!");
+      } catch (err) {
+        console.error("Failed to update stats:", err);
+      }
+    })();
+  }
+}, [isCompleted]);
 
   // ---------------- Progress ----------------
   const userFilled = grid.flat().filter((c) => c && c !== '').length;
