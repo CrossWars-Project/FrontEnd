@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import supabase from '../../supabaseClient';
 
-function BattleInvite() {
+function BattleInvite({ onClose, onCreated }) {
   const [inviteLink, setInviteLink] = useState(null);
   const [battleId, setBattleId] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -46,12 +46,20 @@ function BattleInvite() {
 
       // build invite link
       const link = `${window.location.origin}/battle/${data.invite_token}`;
-      //const battleId = data.battle_id; // might need later for multiplayer games (?)
+      // const battleId = data.battle_id; // might need later for multiplayer games (?)
 
       console.log('Invite Link:', link);// for testing show invite link in console
 
       setInviteLink(link);
       setBattleId(data.battle_id);
+
+      if (typeof onCreated === 'function') {
+        onCreated({
+          inviteLink: link,
+          inviteToken: data.invite_token,
+          battleId: data.battle_id,
+        });
+      }
     } catch (err) {
       console.error('Error creating battle:', err);
       setError(err.message);
@@ -101,6 +109,11 @@ function BattleInvite() {
           </a>
           <br />
           <button onClick={copyLink}>Copy Link</button>
+          {onClose && (
+            <button onClick={onClose}>
+              Close
+            </button>
+          )}
         </div>
       )}
     </div>

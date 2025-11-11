@@ -11,7 +11,7 @@ function LoginSignup() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { signUpNewUser, loginUser } = UserAuth();
+  const { signUpNewUser, loginUser, setGuestMode } = UserAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -63,6 +63,7 @@ function LoginSignup() {
   };
 
   const handlePlayAsGuest = () => {
+    setGuestMode();
     navigate('/guestDashboard');
   };
 
