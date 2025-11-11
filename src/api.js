@@ -34,7 +34,7 @@ export const getUserStats = async (userId) => {
 };
 
 export const updateUserStats = async (userStats) => {
-  const res = await API.put(`/stats/update_user_stats/`, userStats);
+  const res = await API.put('/stats/update_user_stats/', userStats);
   return res.data;
 };
 
