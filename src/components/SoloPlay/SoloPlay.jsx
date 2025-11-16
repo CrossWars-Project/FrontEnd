@@ -171,7 +171,6 @@ export default function SoloPlay() {
     (async () => {
       try {
         await updateUserStats({
-          user_id: user.id,
           num_solo_games: 1,        // backend handles increment / better logic
           num_wins: 1,
           fastest_solo_time: elapsed,
