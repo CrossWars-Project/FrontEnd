@@ -20,7 +20,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      'esbuild': 'esbuild-wasm',
+      esbuild: 'esbuild-wasm',
     },
   },
 });
