@@ -17,6 +17,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.76.1",
     "axios": "^1.12.2",
+    "node": "^25.2.0",
     "esbuild-wasm": "^0.27.0",
     "prop-types": "^15.8.1",
     "react": "^19.1.1",
