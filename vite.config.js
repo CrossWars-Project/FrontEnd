@@ -19,3 +19,9 @@ export default defineConfig({
     jsx: 'automatic',
   },
 });
+  resolve: {
+    alias: {
+      esbuild: 'esbuild-wasm',
+    },
+  },
+});
