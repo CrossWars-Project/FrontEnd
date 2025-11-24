@@ -22,7 +22,6 @@ function LoginSignup() {
 
     try {
       if (action === 'Sign Up') {
-        if (action === 'Sign Up') {
         // alert user if the password they tried is too short
         if (!password || password.length < MIN_PASSWORD_LENGTH) {
           alert(`Password must be at least ${MIN_PASSWORD_LENGTH} characters long.`);
