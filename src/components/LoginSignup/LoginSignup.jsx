@@ -18,12 +18,20 @@ function LoginSignup() {
   // redirect target from invite or default
   const redirectTo = location.state?.from || new URLSearchParams(location.search).get("redirect") || "/dashboard";
 
+  const MIN_PASSWORD_LENGTH = 6;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      if (action === "Sign Up") {
+      if (action === 'Sign Up') {
+        // alert user if the password they tried is too short
+        if (!password || password.length < MIN_PASSWORD_LENGTH) {
+          alert(`Password must be at least ${MIN_PASSWORD_LENGTH} characters long.`);
+          setLoading(false);
+          return;
+        }
         const result = await signUpNewUser({ email, password, displayName });
         if (result.success) {
           alert("Sign-up successful! Please verify your email before logging in.");
