@@ -22,14 +22,39 @@ export const createUser = async (user) => {
 };
 
 // this adds a newly created user to the stats table with default stats
-export const createUserStats = async (user) => {
-  const res = await API.post('/stats/create_user_stats', user);
+export const createUserStats = async (user, token) => {
+  if (!token) {
+    // Fail fast so caller knows they must pass a token
+    throw new Error('createUserStats requires an Authorization token');
+  }
+
+  const res = await API.post('/stats/create_user_stats', user, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
   return res.data;
 };
 
 // find the stats for a specific user using their ID
 export const getUserStats = async (userId) => {
   const res = await API.get(`/stats/get_user_stats/${userId}`);
+  return res.data;
+};
+
+// updates a user's stats in the stats table after they play a game
+// accepts (payload, token) and sends Authorization: Bearer <token>
+export const updateUserStats = async (userStats, token) => {
+  if (!token) {
+    throw new Error('updateUserStats requires an Authorization token');
+  }
+
+  const res = await API.put('/stats/update_user_stats', userStats, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
   return res.data;
 };
 
