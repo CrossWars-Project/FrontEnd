@@ -14,12 +14,21 @@ function LoginSignup() {
   const { signUpNewUser, loginUser, setGuestMode } = UserAuth();
   const navigate = useNavigate();
 
+  const MIN_PASSWORD_LENGTH = 6;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
       if (action === 'Sign Up') {
+        if (action === 'Sign Up') {
+        // alert user if the password they tried is too short
+        if (!password || password.length < MIN_PASSWORD_LENGTH) {
+          alert(`Password must be at least ${MIN_PASSWORD_LENGTH} characters long.`);
+          setLoading(false);
+          return;
+        }
         const result = await signUpNewUser({ email, password, displayName });
         // if a new user is successfully created, we want to add them to stats table and then
         // take them to the dashboard.
