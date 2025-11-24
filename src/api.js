@@ -42,7 +42,7 @@ export const getUserStats = async (userId) => {
   return res.data;
 };
 
-//updates a user's stats in the stats table after they play a game
+// updates a user's stats in the stats table after they play a game
 // accepts (payload, token) and sends Authorization: Bearer <token>
 export const updateUserStats = async (userStats, token) => {
   if (!token) {
