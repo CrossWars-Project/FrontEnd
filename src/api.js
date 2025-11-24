@@ -42,6 +42,22 @@ export const getUserStats = async (userId) => {
   return res.data;
 };
 
+//updates a user's stats in the stats table after they play a game
+// accepts (payload, token) and sends Authorization: Bearer <token>
+export const updateUserStats = async (userStats, token) => {
+  if (!token) {
+    throw new Error('updateUserStats requires an Authorization token');
+  }
+
+  const res = await API.put('/stats/update_user_stats', userStats, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+  return res.data;
+};
+
 export const loginUser = async (credentials) => {
   const res = await API.post('/login', credentials); // backend login route
   return res.data;
