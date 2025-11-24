@@ -9,16 +9,16 @@ export default function BattleRoom() {
 
   const [battle, setBattle] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [playerNumber, setPlayerNumber] = useState(null);
-  const [playerReady, setPlayerReady] = useState(false);
+  const [userReady, setUserReady] = useState(false);
   const [opponentReady, setOpponentReady] = useState(false);
   const [opponentJoined, setOpponentJoined] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState(null);
 
   // -----------------------------------------------------------
-  // Fetch battle and determine player
+  // Fetch battle from backend
   // -----------------------------------------------------------
   useEffect(() => {
-    async function checkAuthAndFetch() {
+    async function fetchBattle() {
       const { data: { session } } = await supabase.auth.getSession();
       const isGuest = sessionStorage.getItem("guestUser") === "true";
 
@@ -27,79 +27,46 @@ export default function BattleRoom() {
         return;
       }
 
-      async function fetchBattle() {
-        const headers = session ? { Authorization: `Bearer ${session.access_token}` } : {};
-        const maxRetries = 12;
-        const delay = 500;
+      const userId = session?.user?.id || null;
+      setCurrentUserId(userId);
 
-        for (let attempt = 0; attempt < maxRetries; attempt++) {
-          const res = await fetch(`http://127.0.0.1:8000/api/battles/${battleId}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json", ...headers },
-            credentials: "include",
-            body: JSON.stringify({})
-          });
+      const headers = session ? { Authorization: `Bearer ${session.access_token}` } : {};
+      const res = await fetch(`http://127.0.0.1:8000/api/battles/${battleId}`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json", ...headers },
+        credentials: "include",
+        //body: JSON.stringify({})
+      });
 
-          if (res.ok) {
-            const { battle: data } = await res.json();
-
-            // Determine playerNum
-            const savedPlayerNum = sessionStorage.getItem(`battle-${battleId}-player`);
-            let playerNum;
-            if (savedPlayerNum) {
-              playerNum = parseInt(savedPlayerNum, 10);
-            } else {
-              const isInviteJoin = sessionStorage.getItem("inviteJoin") === "true";
-              playerNum = isInviteJoin ? 2 : 1;
-              sessionStorage.setItem(`battle-${battleId}-player`, playerNum);
-              sessionStorage.removeItem("inviteJoin");
-            }
-            setPlayerNumber(playerNum);
-
-            // Determine opponent joined immediately
-            let opponentExists = false;
-            if (playerNum === 1) {
-              opponentExists = Boolean(data.player2_id) || Boolean(data.player2_is_guest);
-            } else {
-              opponentExists = Boolean(data.player1_id) || Boolean(data.player1_is_guest);
-            }
-            setOpponentJoined(opponentExists);
-
-            // Set ready flags from battle
-            const player1Ready = Boolean(data.player1_ready);
-            const player2Ready = Boolean(data.player2_ready);
-            setPlayerReady(playerNum === 1 ? player1Ready : player2Ready);
-            setOpponentReady(playerNum === 1 ? player2Ready : player1Ready);
-
-            setBattle(data);
-            setLoading(false);
-            return;
-          }
-
-          if (res.status === 404) {
-            await new Promise(resolve => setTimeout(resolve, delay));
-            continue;
-          }
-
-          console.error("Error loading battle:", res.status);
-          break;
-        }
-
+      if (!res.ok) {
         setLoading(false);
-        setBattle(null);
+        return setBattle(null);
       }
 
-      fetchBattle();
+      const { battle: data } = await res.json();
+      setBattle(data);
+
+      const opponentExists = !!data.player2_id || data.player2_is_guest;
+      setOpponentJoined(opponentExists);
+
+      // Ready states
+      const userIsPlayer1 = session?.user?.id === data.player1_id || (isGuest && data.player2_is_guest);
+      setUserReady(userIsPlayer1 ? data.player1_ready : data.player2_ready);
+      setOpponentReady(userIsPlayer1 ? data.player2_ready : data.player1_ready);
+
+      setCurrentUserId(session?.user?.id || "guest");
+
+      setLoading(false);
     }
 
-    checkAuthAndFetch();
+    fetchBattle();
   }, [battleId, navigate]);
 
   // -----------------------------------------------------------
-  // Supabase Realtime listener for opponent join and ready
+  // Supabase Realtime listener for ready updates
   // -----------------------------------------------------------
   useEffect(() => {
-    if (!playerNumber) return;
+    if (!battle) return;
 
     const channel = supabase
       .channel(`battle-${battleId}`)
@@ -110,24 +77,16 @@ export default function BattleRoom() {
           const newRow = payload.new;
           if (!newRow) return;
 
-          // Detect opponent joined
-          if (playerNumber === 1) {
-            setOpponentJoined(Boolean(newRow.player2_id) || Boolean(newRow.player2_is_guest));
-          } else {
-            setOpponentJoined(Boolean(newRow.player1_id) || Boolean(newRow.player1_is_guest));
-          }
+          // Opponent joined if player2 exists
+          const opponentExists = !!newRow.player2_id || newRow.player2_is_guest;
+          setOpponentJoined(opponentExists);
 
-          // Update ready states
-          if (playerNumber === 1) {
-            setOpponentReady(Boolean(newRow.player2_ready));
-            setPlayerReady(Boolean(newRow.player1_ready));
-          } else {
-            setOpponentReady(Boolean(newRow.player1_ready));
-            setPlayerReady(Boolean(newRow.player2_ready));
-          }
+          // Ready states
+          setUserReady(userIsPlayer1 ? newRow.player1_ready : newRow.player2_ready);
+          setOpponentReady(userIsPlayer1 ? newRow.player2_ready : newRow.player1_ready);
 
-          // Navigate when both ready
-          if ((newRow.player1_ready && newRow.player2_ready)) {
+
+          if (row.player1_ready && row.player2_ready) {
             navigate(`/battle/${battleId}/play`);
           }
         }
@@ -135,21 +94,20 @@ export default function BattleRoom() {
       .subscribe();
 
     return () => supabase.removeChannel(channel);
-  }, [battleId, playerNumber, navigate]);
+  }, [battle, battleId, navigate]);
 
   // -----------------------------------------------------------
-  // Handle Ready button (optimistic update)
+  // Handle Ready button
   // -----------------------------------------------------------
   async function handleReady() {
-    setPlayerReady(true); // optimistic update
+    setUserReady(true); // optimistic update
 
     try {
       await fetch(`http://127.0.0.1:8000/api/battles/${battleId}/ready`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ playerNumber })
-      }).catch(() => {});
+      });
     } catch (err) {
       console.error('[BattleRoom] handleReady error:', err);
     }
@@ -164,20 +122,19 @@ export default function BattleRoom() {
   return (
     <div className="battle-room">
       <h1>Battle Room</h1>
-      <p>You are Player {playerNumber ?? "?"}</p>
-
       {!opponentJoined && <p className="waiting">Waiting for opponent to join...</p>}
 
       {opponentJoined && (
         <>
           <p className="joined">Opponent joined</p>
           <div className="ready-section">
-            <button disabled={playerReady} className="ready-btn" onClick={handleReady}>
-              {playerReady ? "Ready" : "Click to Ready Up"}
+            <button disabled={userReady} className="ready-btn" onClick={handleReady}>
+              {userReady ? "Ready" : "Click to Ready Up"}
             </button>
+            <p>You: {userReady ? "Ready" : "Not Ready"}</p>
             <p>Opponent: {opponentReady ? "Ready" : "Not Ready"}</p>
           </div>
-          {playerReady && opponentReady && <p className="starting">Starting the battle...</p>}
+          {userReady && opponentReady && <p className="starting">Starting the battle...</p>}
         </>
       )}
     </div>

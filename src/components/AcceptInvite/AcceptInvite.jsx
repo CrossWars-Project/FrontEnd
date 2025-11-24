@@ -18,9 +18,10 @@ export default function AcceptInvite() {
 
       // If no token and not a guest, go to login page
       if (!token && !isGuest) {
-        navigate("/loginSignup", {
+        sessionStorage.setItem("pendingInviteToken", inviteToken);
+        navigate("/loginSignup", { 
           replace: true,
-          state: { from: `/accept/${inviteToken}` },
+          state: { from: `/accept/${inviteToken}` } 
         });
         return;
       }
@@ -41,13 +42,23 @@ export default function AcceptInvite() {
         const data = await res.json();
 
         if (!data.battle_id) throw new Error("No battle_id returned");
-        
+
+        // If backend indicates this join is a guest, persist it
+        if (data.is_guest) {
+          sessionStorage.setItem("guestUser", "true");
+        } else {
+          // clear any stale guest flag just in case
+          sessionStorage.removeItem("guestUser");
+        }
+
+        sessionStorage.removeItem("pendingInviteToken");
         sessionStorage.setItem("inviteJoin", "true");
+        
 
         // Redirect to battleroom
-        navigate(`/battle-room/${data.battle_id}`, { 
+        navigate(`/battle-room/${data.battle_id}`, {
           replace: true,
-          state: { inviteToken },
+          state: {inviteToken},
         });
 
       } catch (err) {
