@@ -32,9 +32,12 @@ function LoginSignup() {
         // if a new user is successfully created, we want to add them to stats table and then
         // take them to the dashboard.
         if (result.success) {
-          // show a friendly message (e.g., toast or inline text)
+          // show message telling user to verify their email
           alert('Sign-up successful! Please verify your email before logging in.');
           setAction('Login'); // redirect to login screen
+        } else {
+          // show returned error message (ex: invalid email) if present
+          alert(result.error?.message || result.error || 'Sign-up failed');
         }
       } else {
         const result = await loginUser({ email, password });
