@@ -34,8 +34,12 @@ function LoginSignup() {
         }
         const result = await signUpNewUser({ email, password, displayName });
         if (result.success) {
-          alert("Sign-up successful! Please verify your email before logging in.");
-          setAction("Login");
+          // show message telling user to verify their email
+          alert('Sign-up successful! Please verify your email before logging in.');
+          setAction('Login'); // redirect to login screen
+        } else {
+          // show returned error message (ex: invalid email) if present
+          alert(result.error?.message || result.error || 'Sign-up failed');
         }
       } else {
         const result = await loginUser({ email, password });
