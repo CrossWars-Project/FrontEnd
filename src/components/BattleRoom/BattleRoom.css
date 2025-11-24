@@ -1,0 +1,90 @@
+.battle-room {
+  width: 100%;
+  max-width: 600px;
+  margin: 3rem auto;
+  padding: 2rem;
+  background: #ffffff;
+  border-radius: 18px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  text-align: center;
+  font-family: inherit;
+}
+
+/* Title */
+.battle-room h1 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  color: #222;
+}
+
+/* Subtle text (battle id, player number) */
+.battle-room p {
+  font-size: 1rem;
+  color: #444;
+  margin: 0.3rem 0;
+}
+
+.waiting {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: #fdf3d0;
+  border: 1px solid #f5d27b;
+  border-radius: 10px;
+  color: #8a6d1a;
+  font-weight: 600;
+}
+
+.joined {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: #e2f6e7;
+  border: 1px solid #7fd19b;
+  border-radius: 10px;
+  color: #2f7a47;
+  font-weight: 600;
+}
+
+/* Ready button section */
+.ready-section {
+  margin-top: 1.5rem;
+}
+
+.ready-btn {
+  padding: 0.7rem 1.4rem;
+  font-size: 1rem;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  background: #0078ff;
+  color: white;
+  font-weight: 600;
+  transition: 0.2s ease;
+}
+
+.ready-btn:hover:not(:disabled) {
+  background: #005fcc;
+}
+
+.ready-btn:disabled {
+  background: #cccccc;
+  cursor: default;
+}
+
+.starting {
+  margin-top: 1.2rem;
+  font-size: 1.1rem;
+  color: #007800;
+  font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .battle-room {
+    margin: 1.5rem;
+    padding: 1.5rem;
+  }
+
+  .ready-btn {
+    width: 100%;
+  }
+}
