@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import supabase from "../../supabaseClient";
 import "./BattleRoom.css";
@@ -12,7 +12,10 @@ export default function BattleRoom() {
   const [userReady, setUserReady] = useState(false);
   const [opponentReady, setOpponentReady] = useState(false);
   const [opponentJoined, setOpponentJoined] = useState(false);
+  const [countdown, setCountdown] = useState(null);
+  const countdownRef = useRef(null);
   const [currentUserId, setCurrentUserId] = useState(null);
+  const [userIsPlayer1, setUserIsPlayer1] = useState(null);
 
   // -----------------------------------------------------------
   // Fetch battle from backend
@@ -50,9 +53,21 @@ export default function BattleRoom() {
       setOpponentJoined(opponentExists);
 
       // Ready states
-      const userIsPlayer1 = session?.user?.id === data.player1_id || (isGuest && data.player2_is_guest);
-      setUserReady(userIsPlayer1 ? data.player1_ready : data.player2_ready);
-      setOpponentReady(userIsPlayer1 ? data.player2_ready : data.player1_ready);
+     
+      const isP1 = session?.user?.id === data.player1_id;
+      const isP2 = session?.user?.id === data.player2_id || (!session?.user?.id && data.player2_is_guest);
+
+      // default:
+      let userIsP1Value = null;
+
+      if (isP1) userIsP1Value = true;
+      else if (isP2) userIsP1Value = false;
+
+      setUserIsPlayer1(userIsP1Value);
+
+
+      setUserReady(isP1 ? data.player1_ready : data.player2_ready);
+      setOpponentReady(isP1 ? data.player2_ready : data.player1_ready);
 
       setCurrentUserId(session?.user?.id || "guest");
 
@@ -86,7 +101,7 @@ export default function BattleRoom() {
           setOpponentReady(userIsPlayer1 ? newRow.player2_ready : newRow.player1_ready);
 
 
-          if (row.player1_ready && row.player2_ready) {
+          if (newRow.player1_ready && newRow.player2_ready) {
             navigate(`/battle/${battleId}/play`);
           }
         }
@@ -94,24 +109,32 @@ export default function BattleRoom() {
       .subscribe();
 
     return () => supabase.removeChannel(channel);
-  }, [battle, battleId, navigate]);
+  }, [battle, battleId, userIsPlayer1, navigate]);
 
   // -----------------------------------------------------------
   // Handle Ready button
   // -----------------------------------------------------------
   async function handleReady() {
-    setUserReady(true); // optimistic update
+    setUserReady(true); // optimistic UI update
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+
+      const headers = {
+        "Content-Type": "application/json",
+        ...(session ? { Authorization: `Bearer ${session.access_token}` } : {})
+      };
+
       await fetch(`http://127.0.0.1:8000/api/battles/${battleId}/ready`, {
         method: "POST",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        headers,
       });
     } catch (err) {
-      console.error('[BattleRoom] handleReady error:', err);
+      console.error("[BattleRoom] handleReady error:", err);
     }
   }
+
 
   // -----------------------------------------------------------
   // Render UI
