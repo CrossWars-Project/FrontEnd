@@ -22,8 +22,17 @@ export const createUser = async (user) => {
 };
 
 // this adds a newly created user to the stats table with default stats
-export const createUserStats = async (user) => {
-  const res = await API.post('/stats/create_user_stats', user);
+export const createUserStats = async (user, token) => {
+  if (!token) {
+    // Fail fast so caller knows they must pass a token
+    throw new Error('createUserStats requires an Authorization token');
+  }
+
+  const res = await API.post('/stats/create_user_stats', user, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
   return res.data;
 };
 

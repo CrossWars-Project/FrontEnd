@@ -37,23 +37,33 @@ function LoginSignup() {
         }
 
         if (result.success) {
-          const { user } = result.data;
+          const { user, session } = result.data || {}; // adapt to your loginUser shape
 
-          try {
-          // ✅ Check if stats already exist
-            const statsResponse = await getUserStats(user.id);
-            if (!statsResponse.exists) {
-              await createUserStats({
-                id: user.id,
-                display_name: user.user_metadata?.display_name || user.email.split('@')[0], // fallback
-              });
+            // Get display name fallback
+            const displayNameToSend =
+              user.user_metadata?.display_name || user.email.split("@")[0];
+
+            try {
+              // Obtain access token — adapt depending on your auth helper return shape:
+              // 1) If loginUser returned session: prefer session.access_token
+              let token = session?.access_token || session?.accessToken || null;
+
+              // 2) Fallback: ask supabase client for the session (if above is undefined)
+              if (!token && window?.supabase) {
+                // If you expose supabase client on window (not recommended), or import it:
+                const { data } = await window.supabase.auth.getSession();
+                token = data?.session?.access_token;
+              }
+
+              // Call backend with Authorization header. Only send display_name (backend takes user id from token)
+              await createUserStats({ display_name: displayNameToSend }, token);
+            } catch (err) {
+              console.error("Error while checking/creating stats:", err);
+              // Not fatal — allow navigation
             }
-          } catch (err) {
-            console.error('Error while checking/creating stats:', err);
-          // Not fatal — allow navigation
+
+            navigate("/dashboard");
           }
-          navigate('/dashboard');
-        }
       }
     } catch (err) {
       console.error('An unexpected error occurred:', err);
