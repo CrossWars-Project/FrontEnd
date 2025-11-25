@@ -142,10 +142,11 @@
   max-width: 420px;
   text-align: center;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
-  display: flex;
+   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1.5rem; /* creates vertical spacing between children */
+  margin: auto;
 }
 
 .logo-container {
@@ -161,13 +162,14 @@
 .popup-title {
   font-size: 1.8rem;
   font-weight: bold;
-  color: #222;
+  color: white;
 }
 
 .popup-content {
   display: flex;
   flex-direction: column;
   align-items: center;
+  color: white;
 }
 
 .popup-time {
