@@ -170,7 +170,7 @@ export default function BattlePlay() {
           const row = payload.row !== undefined ? Number(payload.row) : null;
           const col = payload.col !== undefined ? Number(payload.col) : null;
           const player = payload.player ?? payload.playerId ?? null;
-          if (player === (user?.user_id || "guest")) return;
+          if (player === (user?.id || "guest")) return;
           if (row === null || col === null) return;
           setOpponentSelection({ row, col });
         } catch (e) {
@@ -222,7 +222,8 @@ export default function BattlePlay() {
         payload: {
           row,
           col,
-          player: user?.id || "guest",
+          player: user?.user_id || user?.id || "guest",
+
         },
       }).catch((err) => {
         console.warn("Realtime send error (will not crash):", err);
