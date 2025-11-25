@@ -170,9 +170,9 @@ useEffect(() => {
         await updateUserStats(
           {
             num_solo_games: 1, // backend handles increment / better logic
-            num_wins: 1,
+            num_complete_solo: 1,
             fastest_solo_time: elapsed,
-            dt_last_seen: new Date().toISOString(),
+            dt_last_seen_solo: new Date().toISOString(),
           },
           token
         );
