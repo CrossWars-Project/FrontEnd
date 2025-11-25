@@ -271,6 +271,9 @@
   align-items: center;
   justify-content: center;
   background: rgba(0, 0, 0, 0.5);
+  flex-direction: column;
+  gap: 1.5rem; /* creates vertical spacing between children */
+  margin: auto;
 }
 
 .popup-inner {
