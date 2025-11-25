@@ -88,7 +88,7 @@ export default function BattleRoom() {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "battles", filter: `id=eq.${battleId}` },
-        (payload) => {
+        async (payload) => {
           const newRow = payload.new;
           if (!newRow) return;
 
@@ -102,8 +102,20 @@ export default function BattleRoom() {
 
 
           if (newRow.player1_ready && newRow.player2_ready) {
-            navigate(`/battle/${battleId}/play`);
+          try {
+            // Mark battle as started on the backend
+            await fetch(`http://127.0.0.1:8000/api/battles/${battleId}/start`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+            });
+          } catch (err) {
+            console.error("[BattleRoom] Failed to start battle:", err);
           }
+
+          // Navigate to battle play
+          navigate(`/battle/${battleId}/play`);
+        }
         }
       )
       .subscribe();
