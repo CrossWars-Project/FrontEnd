@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "./SoloPlay.css";
 import { useNavigate } from "react-router-dom";
 import { FaSignOutAlt, FaClock } from "react-icons/fa";
 import { UserAuth } from "../../context/AuthContext";
+import { updateUserStats } from "../../api";
 
 const GRID_SIZE = 5;
 
@@ -39,16 +40,24 @@ export default function SoloPlay() {
   // ---------------- Completion ----------------
   const [isCompleted, setIsCompleted] = useState(false);
 
+  // ---------------- Send Stats ----------------
+  const [hasSentStats, setHasSentStats] = useState(false);
+
   // ---------------- Fetch Crossword ----------------
+  const hasFetchedRef = useRef(false);
+
   useEffect(() => {
-    if (crosswordFetched) return; // prevent double generation
-    async function fetchCrossword(theme = 'technology') {
+    // Prevent double fetch using ref (survives React StrictMode remounts)
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
+
+    async function fetchCrossword() {
       setLoading(true);
       try {
-        const res = await fetch('http://127.0.0.1:8000/crossword/generate', {
-          method: 'POST',
+        // Fetch the daily solo play crossword
+        const res = await fetch('http://127.0.0.1:8000/crossword/solo', {
+          method: 'GET',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ theme }),
         });
         if (!res.ok) throw new Error('Failed to fetch crossword');
 
@@ -58,53 +67,37 @@ export default function SoloPlay() {
 
         const formattedGrid = crossword.grid.map((row) => row.map((cell) => (cell === '-' ? ' ' : cell)));
 
-        // --- Numbering Logic ---
-        let num = 1;
-        const numbered = formattedGrid.map((row, rIdx) => row.map((cell, cIdx) => {
-          if (cell === ' ') return null; // black square
-          const leftBlack = cIdx === 0 || formattedGrid[rIdx][cIdx - 1] === ' ';
-          const rightWhite = cIdx < GRID_SIZE - 1 && formattedGrid[rIdx][cIdx + 1] !== ' ';
-          const startsAcross = leftBlack && rightWhite;
+        // --- Numbering Logic: Assign numbers based on backend's placed_words order ---
+        const numbered = formattedGrid.map((row) => row.map(() => null));
+        
+        let clueNumber = 1;
+        const acrossClueNumbers = [];
+        const downClueNumbers = [];
 
-          const topBlack = rIdx === 0 || formattedGrid[rIdx - 1][cIdx] === ' ';
-          const bottomWhite = rIdx < GRID_SIZE - 1 && formattedGrid[rIdx + 1][cIdx] !== ' ';
-          const startsDown = topBlack && bottomWhite;
-
-          if (startsAcross || startsDown) return num++;
-          return null;
-        }));
-
-        // --- Build Across and Down clue numbers from the grid ---
-        const acrossNumbers = [];
-        const downNumbers = [];
-
-        for (let r = 0; r < GRID_SIZE; r++) {
-          for (let c = 0; c < GRID_SIZE; c++) {
-            const numVal = numbered[r][c];
-            if (!numVal) continue;
-
-            // Across start: cell is non-space, left is blank/outside, right is a letter
-            const startsAcross = (c === 0 || formattedGrid[r][c - 1] === ' ')
-              && c < GRID_SIZE - 1
-              && formattedGrid[r][c + 1] !== ' ';
-            if (startsAcross) acrossNumbers.push(numVal);
-
-            // Down start: cell is non-space, top is blank/outside, below is a letter
-            const startsDown = (r === 0 || formattedGrid[r - 1][c] === ' ')
-              && r < GRID_SIZE - 1
-              && formattedGrid[r + 1][c] !== ' ';
-            if (startsDown) downNumbers.push(numVal);
+        // Number cells in the order backend provides them in placed_words
+        crossword.placed_words.forEach(([word, row, col, isAcross]) => {
+          // Only assign a number if this cell doesn't already have one
+          if (numbered[row][col] === null) {
+            numbered[row][col] = clueNumber;
+            clueNumber++;
           }
-        }
+          
+          // Track which number corresponds to this clue
+          if (isAcross) {
+            acrossClueNumbers.push(numbered[row][col]);
+          } else {
+            downClueNumbers.push(numbered[row][col]);
+          }
+        });
 
-        // Now attach backend clues in the *same order*
+        // Attach backend clues with the correct numbers
         const numberedAcross = crossword.clues_across?.map((clue, i) => ({
-          number: acrossNumbers[i],
+          number: acrossClueNumbers[i],
           text: clue,
         })) || [];
 
         const numberedDown = crossword.clues_down?.map((clue, i) => ({
-          number: downNumbers[i],
+          number: downClueNumbers[i],
           text: clue,
         })) || [];
 
@@ -122,7 +115,7 @@ export default function SoloPlay() {
       }
     }
     fetchCrossword();
-  }, [crosswordFetched]);
+  }, []);
 
   // ---------------- Timer ----------------
   useEffect(() => {
@@ -159,6 +152,38 @@ export default function SoloPlay() {
     if (allCorrect && !isCompleted) setIsCompleted(true);
   }, [grid, solution, isCompleted]);
 
+  // ---------------- Send Stats ---------------
+useEffect(() => {
+  if (isCompleted && user && session && !hasSentStats) {
+    setHasSentStats(true); // prevent multiple calls
+
+    (async () => {
+      try {
+        // Try common session token shapes (adapt if your UserAuth uses a different shape)
+        const token = session?.access_token || session?.accessToken || null;
+
+        if (!token) {
+          console.warn('No session token available; skipping stats update');
+          return;
+        }
+
+        await updateUserStats(
+          {
+            num_solo_games: 1, // backend handles increment / better logic
+            num_wins: 1,
+            fastest_solo_time: elapsed,
+            dt_last_seen: new Date().toISOString(),
+          },
+          token
+        );
+        console.log('Stats update sent successfully!');
+      } catch (err) {
+        console.error('Failed to update stats:', err);
+      }
+    })();
+  }
+}, [isCompleted, user, session, elapsed, hasSentStats]);
+
   // ---------------- Progress ----------------
   const userFilled = grid.flat().filter((c) => c && c !== '').length;
   const totalLetters = solution.flat().filter((c) => c !== ' ').length;
@@ -169,7 +194,7 @@ export default function SoloPlay() {
     return (
       <div className="battle-container">
         <div className="loading-popup">
-          <p>Generating your crossword... Please wait 20–30 seconds</p>
+          <p>Loading today's crossword...</p>
         </div>
       </div>
     );

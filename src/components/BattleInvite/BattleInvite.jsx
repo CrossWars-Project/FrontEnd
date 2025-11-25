@@ -1,5 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import supabase from '../../supabaseClient';
+import { useNavigate } from 'react-router-dom';
+
 
 function BattleInvite({ onClose, onCreated }) {
   const [inviteLink, setInviteLink] = useState(null);
@@ -7,72 +9,71 @@ function BattleInvite({ onClose, onCreated }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  const navigate = useNavigate();
+  const hasCreatedInvite = useRef(false);
+
+
   // auto-create invite when component mounts
+
   useEffect(() => {
-    createInvite();
+    if(!hasCreatedInvite.current) {
+      hasCreatedInvite.current = true;
+      createInvite();
+    }
+    
   }, []);
 
+
   async function createInvite() {
-    setLoading(true);
-    setError(null);
-    try {
-      // Get auth token
+  setLoading(true);
+  setError(null);
 
-      const { data: { session } } = await supabase.auth.getSession();
-
-      if (!session) {
-        setError('You must be logged in to invite players to battle.');
-        return;
-      }
-
-      // Call backend to create invite
-      const response = await fetch('http://localhost:8000/invites/create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-
-      // Handle bad response
-      if (!response.ok) {
-        const errorData = await response.json();
-        setError(errorData.detail || 'Failed to create invite.');
-        return;
-      }
-
-      // Handele good response, extract invite token
-      const data = await response.json();
-
-      // build invite link
-      const link = `${window.location.origin}/battle/${data.invite_token}`;
-      // const battleId = data.battle_id; // might need later for multiplayer games (?)
-
-      console.log('Invite Link:', link);// for testing show invite link in console
-
-      setInviteLink(link);
-      setBattleId(data.battle_id);
-
-      if (typeof onCreated === 'function') {
-        onCreated({
-          inviteLink: link,
-          inviteToken: data.invite_token,
-          battleId: data.battle_id,
-        });
-      }
-    } catch (err) {
-      console.error('Error creating battle:', err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      setError("You must be logged in.");
+      return;
     }
-  }
 
+    const res = await fetch("http://localhost:8000/invites/create", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.access_token}`,
+      },
+    });
+
+    if (!res.ok) {
+      const errData = await res.json();
+      setError(errData.detail || "Failed to create invite");
+      return;
+    }
+
+    const data = await res.json();
+
+    // BattleInvite.jsx
+    const inviteUrl = `${window.location.origin}/accept/${data.invite_token}`;
+
+    setInviteLink(inviteUrl);
+    setBattleId(data.battle_id);
+
+    // ✅ Player 1 immediately enters the battle room
+    //navigate(`/battle-room/${data.battle_id}`);
+
+  } catch (err) {
+    setError(err.message);
+  } finally {
+    setLoading(false);
+  }
+}
+
+  
   function copyLink() {
     navigator.clipboard.writeText(inviteLink);
     alert('Invite link copied to clipboard!');
   }
 
+  
   if (loading) {
     return (
       <div>
@@ -109,6 +110,19 @@ function BattleInvite({ onClose, onCreated }) {
           </a>
           <br />
           <button onClick={copyLink}>Copy Link</button>
+
+          {battleId && (
+            <button
+              style={{ marginLeft: "10px",
+                       marginRight: "10px"   
+               }}
+              onClick={() => navigate(`/battle-room/${battleId}`)}
+              
+            >
+              Go to Battle Room
+            </button>
+          )}
+
           {onClose && (
             <button onClick={onClose}>
               Close
