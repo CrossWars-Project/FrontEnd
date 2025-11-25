@@ -323,3 +323,44 @@
   background: #ff5252;
 }
 
+/* Mini crossword wrapper */
+.mini-crossword {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 5px 0;
+}
+
+/* Each row in the mini grid */
+.mini-row {
+  display: flex;
+  gap: 2px;
+}
+
+/* Small grid cell */
+.mini-cell {
+  width: 12px;
+  height: 12px;
+  background-color: #ddd;
+  border-radius: 2px;
+}
+
+/* User's black cells */
+.mini-black-cell {
+  background-color: #333;
+}
+
+/* Keep text centered under the mini crossword */
+.progress-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.mini-cell.mini-highlight-blue {
+  background-color: blue !important;
+}
+
+.mini-highlight-green {
+  background-color: green;
+}
