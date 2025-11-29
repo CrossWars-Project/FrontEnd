@@ -3,6 +3,7 @@ import "./LoginSignup.css";
 import { useNavigate, useLocation } from "react-router-dom";
 import { UserAuth } from "../../context/AuthContext";
 import { createUserStats, getUserStats } from "../../api";
+import logo from '../assets/logo.png'; //import logo image so correct path is used
 
 function LoginSignup() {
   const [action, setAction] = useState("Login");
@@ -99,7 +100,7 @@ function LoginSignup() {
     <div className="login-container">
       <div className="login-card">
         <div className="logo-container">
-          <img src="src/components/assets/logo.png" alt="Cross Wars Logo" className="logo" />
+          <img src={logo} alt="Cross Wars Logo" className="logo" />
         </div>
 
         <h1 className="title">{action === "Login" ? "Log in" : "Sign up"}</h1>

@@ -1,6 +1,7 @@
 import './HomeScreen.css';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FaUser, FaPlay } from 'react-icons/fa';
+import logo from '../assets/logo.png'; //import logo image so correct path is used
 
 function HomeScreen() {
   const navigate = useNavigate();
@@ -23,7 +24,7 @@ function HomeScreen() {
     <div className="home-container">
       <div className="home-card">
         <div className="logo-container">
-          <img src="src/components/assets/logo.png" alt="Cross Wars Logo" className="logo" />
+          <img src={logo} alt="Cross Wars Logo" className="logo" />
         </div>
 
         <h1 className="home-title">Cross Wars</h1>

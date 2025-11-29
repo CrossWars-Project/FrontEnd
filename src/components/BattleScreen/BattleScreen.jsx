@@ -5,6 +5,7 @@ import { FaSignOutAlt, FaClock } from "react-icons/fa";
 import { UserAuth } from "../../context/AuthContext";
 import supabase from "../../supabaseClient";
 import { API_BASE_URL } from "../../config";
+import logo from '../assets/logo.png'; //import logo image so correct path is used
 
 const GRID_SIZE = 5;
 
@@ -401,7 +402,7 @@ export default function BattlePlay() {
           <div className="popup">
             <div className="logo-container mb-4">
               <img
-                src="src/components/assets/logo.png"
+                src={logo}
                 alt="Cross Wars Logo"
                 className="logo"
               />
