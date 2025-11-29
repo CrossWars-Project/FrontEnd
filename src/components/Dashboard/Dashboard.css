@@ -156,3 +156,50 @@
   background-color: #bfbfbf;
 }
 
+/* ---------- POPUP MODAL (replaces battle modal styling) ----------- */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+/* Popup content styled similarly to dashboard-card */
+.modal-content {
+  background-color: white;
+  color: #000;
+  padding: 30px 35px;
+  border-radius: 8px;
+  width: 360px;
+  text-align: center;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+/* Close button for BattleInvite modal */
+.modal-close {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 22px;
+  font-weight: bold;
+  cursor: pointer;
+  color: #333;
+}
+
+.modal-close:hover {
+  color: #000;
+}
+
+/* Ensure popup message paragraph has space */
+.modal-content p {
+  margin-bottom: 20px;
+}
+

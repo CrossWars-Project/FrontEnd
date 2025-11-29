@@ -22,7 +22,7 @@ export default function Dashboard() {
   //battle play only creates an invite if the user has not played today
   const handleBattlePlay = () => {
     if (playedToday(stats?.dt_last_seen_battle)) {
-      setPopupMessage("You have already played the battle crossword today! Come back tomorrow for a fresh crossword.");
+      setPopupMessage("You have already played the battle crossword today!");
       return;
     }
     setShowInvite(true);
@@ -30,7 +30,7 @@ export default function Dashboard() {
   //solo play only navigates to the game if the user has not played today
   const handleSoloPlay = () => {
     if (playedToday(stats?.dt_last_seen_solo)) {
-      setPopupMessage("You have already played the solo crossword today! Come back tomorrow for a fresh crossword.");
+      setPopupMessage("You have already played the solo crossword today!");
       return;
     }
     navigate('/solo');
