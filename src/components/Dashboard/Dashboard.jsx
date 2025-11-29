@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Dashboard.css';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -7,6 +7,9 @@ import {
 import { UserAuth } from '../../context/AuthContext';
 import BattleInvite from '../BattleInvite/BattleInvite';
 import '../BattleInvite/BattleInvite.css';
+import { getUserStats } from '../../api';
+import playedToday from '../../utils/checkPlayedToday.jsx';
+
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -14,10 +17,42 @@ export default function Dashboard() {
 
   const [showInvite, setShowInvite] = useState(false);
   const [inviteInfo, setInviteInfo] = useState(null);
-  const handleBattlePlay = () => setShowInvite(true);
-  const handleSoloPlay = () => navigate('/solo');
+  const [stats, setStats] = useState(null);
+  const [popupMessage, setPopupMessage] = useState("");
+  //battle play only creates an invite if the user has not played today
+  const handleBattlePlay = () => {
+    if (playedToday(stats?.dt_last_seen_battle)) {
+      setPopupMessage("You have already played the battle crossword today! Come back tomorrow for a fresh crossword.");
+      return;
+    }
+    setShowInvite(true);
+  };
+  //solo play only navigates to the game if the user has not played today
+  const handleSoloPlay = () => {
+    if (playedToday(stats?.dt_last_seen_solo)) {
+      setPopupMessage("You have already played the solo crossword today! Come back tomorrow for a fresh crossword.");
+      return;
+    }
+    navigate('/solo');
+  };
   const handleStats = () => navigate('/stats');
   const handleSignOut = () => navigate('/');
+
+  // fetch user stats on component mount. This is to get the date of the user's last played game for solo and battle.
+  useEffect(() => {
+  async function fetchStats() {
+    if (!user?.id) return;
+    try {
+      const res = await getUserStats(user.id);
+      if (res.exists && res.data.length > 0) {
+        setStats(res.data[0]);
+      }
+    } catch (err) {
+      console.error("Error fetching stats:", err);
+    }
+  }
+  fetchStats();
+}, [user]);
 
   return (
     <div className="dashboard-container">
@@ -65,6 +100,17 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* popup for if user has already played today. */}
+      {popupMessage && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <p>{popupMessage}</p>
+            <button className="primary-button" onClick={() => setPopupMessage("")}>
+              OK
+            </button>
+          </div>
+        </div>
+      )}
       {showInvite && (
         <div className="modal-overlay">
           <div className="modal-content">
