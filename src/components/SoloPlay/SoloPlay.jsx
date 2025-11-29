@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { FaSignOutAlt, FaClock } from "react-icons/fa";
 import { UserAuth } from "../../context/AuthContext";
 import { updateUserStats } from "../../api";
+import { API_BASE_URL } from "../../config";
 
 const GRID_SIZE = 5;
 
@@ -55,7 +56,7 @@ export default function SoloPlay() {
       setLoading(true);
       try {
         // Fetch the daily solo play crossword
-        const res = await fetch('http://127.0.0.1:8000/crossword/solo', {
+        const res = await fetch(`${API_BASE_URL}/crossword/solo`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
         });

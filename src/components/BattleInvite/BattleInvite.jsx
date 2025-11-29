@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import supabase from '../../supabaseClient';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../../config';
 
 
 function BattleInvite({ onClose, onCreated }) {
@@ -35,7 +36,7 @@ function BattleInvite({ onClose, onCreated }) {
       return;
     }
 
-    const res = await fetch("http://localhost:8000/invites/create", {
+    const res = await fetch(`${API_BASE_URL}/invites/create`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
