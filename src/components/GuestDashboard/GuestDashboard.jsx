@@ -5,6 +5,7 @@ import {
   FaCog, FaSignOutAlt, FaUserFriends, FaUser, FaHashtag,
 } from 'react-icons/fa';
 import { UserAuth } from '../../context/AuthContext';
+import logo from '../assets/logo.png'; //import logo image so correct path is used
 
 export default function GuestDashboard() {
   const navigate = useNavigate();
@@ -31,7 +32,7 @@ export default function GuestDashboard() {
         {/* Logo */}
         <div className="logo-container">
           <div className="logo-container">
-            <img src="src/components/assets/logo.png" alt="Cross Wars Logo" className="logo" />
+            <img src={logo} alt="Cross Wars Logo" className="logo" />
           </div>
         </div>
 

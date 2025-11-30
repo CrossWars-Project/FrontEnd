@@ -7,6 +7,7 @@ import {
 import { UserAuth } from '../../context/AuthContext';
 import BattleInvite from '../BattleInvite/BattleInvite';
 import '../BattleInvite/BattleInvite.css';
+import logo from '../assets/logo.png'; //import logo image so correct path is used
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -34,7 +35,7 @@ export default function Dashboard() {
         {/* Logo */}
         <div className="logo-container">
           <div className="logo-container">
-            <img src="src/components/assets/logo.png" alt="Cross Wars Logo" className="logo" />
+            <img src={logo} alt="Cross Wars Logo" className="logo" />
           </div>
         </div>
 
