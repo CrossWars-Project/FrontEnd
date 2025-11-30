@@ -3,13 +3,15 @@ import "./SoloPlay.css";
 import { useNavigate } from "react-router-dom";
 import { FaSignOutAlt, FaClock } from "react-icons/fa";
 import { UserAuth } from "../../context/AuthContext";
-import { updateUserStats } from "../../api";
+import { updateUserStats, getUserStats } from "../../api";
+import playedToday from '../../utils/checkPlayedToday.jsx';
 
 const GRID_SIZE = 5;
 
 export default function SoloPlay() {
   const { user, session } = UserAuth();
   const navigate = useNavigate();
+  const [popupMessage, setPopupMessage] = useState(""); // popup message if user has already played today
   const handleSignOut = () => {
   if (user && session) {
     navigate('/dashboard'); // logged-in dashboard
@@ -45,6 +47,22 @@ export default function SoloPlay() {
 
   // ---------------- Fetch Crossword ----------------
   const hasFetchedRef = useRef(false);
+
+  //before fetching, check if the user has already played today
+  useEffect(() => {
+    async function checkPlayed() {
+      if (!user?.id) return;
+      try {
+        const res = await getUserStats(user.id);
+        if (res.exists && res.data.length > 0 && playedToday(res.data[0].dt_last_seen_solo)) {
+          setPopupMessage("You have already played the solo crossword today!");
+        }
+      } catch (err) {
+        console.error("Error fetching stats:", err);
+      }
+    }
+    checkPlayed();
+  }, [user]);
 
   useEffect(() => {
     // Prevent double fetch using ref (survives React StrictMode remounts)
@@ -195,6 +213,19 @@ useEffect(() => {
       <div className="battle-container">
         <div className="loading-popup">
           <p>Loading today's crossword...</p>
+        </div>
+      </div>
+    );
+  }
+  // only render popup message if user has already played today
+  if (popupMessage) {
+    return (
+      <div className="modal-overlay">
+        <div className="modal-content">
+          <p>{popupMessage}</p>
+          <button className="primary-button" onClick={() => navigate(user ? "/dashboard" : "/guestDashboard")}>
+            OK
+          </button>
         </div>
       </div>
     );
