@@ -3,6 +3,7 @@ import './Stats.css';
 import PropTypes from 'prop-types';
 import { UserAuth } from '../../context/AuthContext';
 import { getUserStats } from '../../api';
+import logo from '../assets/logo.png'; //import logo image so correct path is used
 
 export default function Stats({ userStats }) {
   const { user } = UserAuth();
@@ -57,7 +58,7 @@ export default function Stats({ userStats }) {
   return (
     <div className="stats-container">
       <div className="logo-container">
-        <img src="src/components/assets/logo.png" alt="Cross Wars Logo" className="logo" />
+        <img src={logo} alt="Cross Wars Logo" className="logo" />
       </div>
 
       <h2 className="stats-title">

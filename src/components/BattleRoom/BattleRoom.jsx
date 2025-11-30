@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import supabase from "../../supabaseClient";
 import "./BattleRoom.css";
+import { API_BASE_URL } from "../../config";
 
 export default function BattleRoom() {
   const { battleId } = useParams();
@@ -34,7 +35,7 @@ export default function BattleRoom() {
       setCurrentUserId(userId);
 
       const headers = session ? { Authorization: `Bearer ${session.access_token}` } : {};
-      const res = await fetch(`http://127.0.0.1:8000/api/battles/${battleId}`, {
+      const res = await fetch(`${API_BASE_URL}/api/battles/${battleId}`, {
         method: "GET",
         headers: { "Content-Type": "application/json", ...headers },
         credentials: "include",
@@ -104,7 +105,7 @@ export default function BattleRoom() {
           if (newRow.player1_ready && newRow.player2_ready) {
           try {
             // Mark battle as started on the backend
-            await fetch(`http://127.0.0.1:8000/api/battles/${battleId}/start`, {
+            await fetch(`${API_BASE_URL}/api/battles/${battleId}/start`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               credentials: "include",
@@ -137,7 +138,7 @@ export default function BattleRoom() {
         ...(session ? { Authorization: `Bearer ${session.access_token}` } : {})
       };
 
-      await fetch(`http://127.0.0.1:8000/api/battles/${battleId}/ready`, {
+      await fetch(`${API_BASE_URL}/api/battles/${battleId}/ready`, {
         method: "POST",
         credentials: "include",
         headers,

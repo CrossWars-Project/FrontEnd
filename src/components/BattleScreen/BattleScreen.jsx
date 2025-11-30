@@ -4,6 +4,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { FaSignOutAlt, FaClock } from "react-icons/fa";
 import { UserAuth } from "../../context/AuthContext";
 import supabase from "../../supabaseClient";
+import { API_BASE_URL } from "../../config";
+import logo from '../assets/logo.png'; //import logo image so correct path is used
 
 const GRID_SIZE = 5;
 
@@ -62,7 +64,7 @@ export default function BattlePlay() {
       setLoading(true);
       try {
         // Fetch the daily battle play crossword
-        const res = await fetch('http://127.0.0.1:8000/crossword/battle', {
+        const res = await fetch(`${API_BASE_URL}/crossword/battle`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
         });
@@ -400,7 +402,7 @@ export default function BattlePlay() {
           <div className="popup">
             <div className="logo-container mb-4">
               <img
-                src="src/components/assets/logo.png"
+                src={logo}
                 alt="Cross Wars Logo"
                 className="logo"
               />

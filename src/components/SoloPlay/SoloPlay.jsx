@@ -5,6 +5,9 @@ import { FaSignOutAlt, FaClock } from "react-icons/fa";
 import { UserAuth } from "../../context/AuthContext";
 import { updateUserStats, getUserStats } from "../../api";
 import playedToday from '../../utils/checkPlayedToday.jsx';
+import { API_BASE_URL } from "../../config";
+import logo from '../assets/logo.png'; //import logo image so correct path is used
+
 
 const GRID_SIZE = 5;
 
@@ -73,7 +76,7 @@ export default function SoloPlay() {
       setLoading(true);
       try {
         // Fetch the daily solo play crossword
-        const res = await fetch('http://127.0.0.1:8000/crossword/solo', {
+        const res = await fetch(`${API_BASE_URL}/crossword/solo`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
         });
@@ -316,7 +319,7 @@ useEffect(() => {
           <div className="popup">
             <div className="logo-container mb-4">
               <img
-                src="src/components/assets/logo.png"
+                src={logo}
                 alt="Cross Wars Logo"
                 className="logo"
               />

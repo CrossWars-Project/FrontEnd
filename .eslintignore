@@ -1,0 +1,8 @@
+# Ignore build output
+dist/
+
+# Ignore test mocks
+__mocks__/
+
+# Ignore dependencies
+node_modules/

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import supabase from "../../supabaseClient";
+import { API_BASE_URL } from "../../config";
 
 export default function AcceptInvite() {
   const { inviteToken } = useParams();
@@ -29,7 +30,7 @@ export default function AcceptInvite() {
       try {
         // Call backend to accept invite (guest or logged-in user)
         const res = await fetch(
-          `http://127.0.0.1:8000/invites/accept/${inviteToken}`,
+          `${API_BASE_URL}/invites/accept/${inviteToken}`,
           {
             method: "POST",
             credentials: "include",
