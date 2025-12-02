@@ -3,10 +3,14 @@ import './Stats.css';
 import PropTypes from 'prop-types';
 import { UserAuth } from '../../context/AuthContext';
 import { getUserStats } from '../../api';
-import logo from '../assets/logo.png'; //import logo image so correct path is used
+import { useNavigate } from 'react-router-dom';
+import {
+  FaCog, FaSignOutAlt, FaUserFriends, FaUser, FaHashtag,
+} from 'react-icons/fa';
 
 export default function Stats({ userStats }) {
   const { user } = UserAuth();
+  const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -58,7 +62,16 @@ export default function Stats({ userStats }) {
   return (
     <div className="stats-container">
       <div className="logo-container">
-        <img src={logo} alt="Cross Wars Logo" className="logo" />
+        <img src="src/components/assets/logo.png" alt="Cross Wars Logo" className="logo" />
+      </div>
+      <div className="top-buttons">
+        <button
+          type="button"
+          className="top-button gray"
+          onClick={() => navigate('/dashboard')}
+        >
+          <FaSignOutAlt /> Back
+        </button>
       </div>
 
       <h2 className="stats-title">
