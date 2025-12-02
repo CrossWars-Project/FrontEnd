@@ -10,6 +10,11 @@ jest.mock('../../context/AuthContext', () => ({
   UserAuth: jest.fn(),
 }));
 
+// Mock API module to prevent import.meta.env issues
+jest.mock('../../api', () => ({
+  getUserStats: jest.fn(() => Promise.resolve({ exists: true, data: [{ dt_last_seen_solo: null, dt_last_seen_battle: null }] })),
+}));
+
 // Mock BattleInvite to simplify testing
 jest.mock('../BattleInvite/BattleInvite', () => (props) => (
   <div data-testid="battle-invite-mock">
