@@ -36,10 +36,15 @@ export default function BattlePlay() {
   // ---------------- Selection Tracking ----------------
   const [selectedCell, setSelectedCell] = useState(null); // your selection
   const [opponentSelection, setOpponentSelection] = useState({ row: null, col: null });
-  
+  const [opponentGrid, setOpponentGrid] = useState([]);
 
   // ---------------- Fetch Crossword ----------------
   const hasFetchedRef = useRef(false);
+
+  // ---------------- Win State ----------------
+  const [gameOver, setGameOver] = useState(false);
+  const [didWin, setDidWin] = useState(null); // true = win, false = lose
+
 
   const handleSignOut = () => {
     if (user && session) {
@@ -112,12 +117,12 @@ export default function BattlePlay() {
 
         setSolution(formattedGrid);
         setGrid(formattedGrid.map((r) => r.map((c) => (c === ' ' ? null : ''))));
+        setOpponentGrid(formattedGrid.map((r) => r.map((c) => (c === ' ' ? null : ''))));
         setCluesAcross(numberedAcross);
         setCluesDown(numberedDown);
         setNumberedCells(numbered);
         setStartTime(Date.now());
         setLoading(false);
-        // setCrosswordFetched(true);
       } catch (err) {
         console.error('Error fetching crossword:', err);
         setLoading(false);
@@ -140,11 +145,18 @@ export default function BattlePlay() {
     if (solution[row][col] === ' ') return;
     const newGrid = grid.map((r) => [...r]);
     const letter = value.slice(-1).toUpperCase();
+    
     if (/^[A-Z]$/.test(letter)) {
       newGrid[row][col] = letter;
+      try {
+        broadcastCellFill(row, col, letter);
+      } catch (err) {
+        console.warn("broadcastCellFill threw:", err);
+      }
+      const width = solution[0]?.length ?? GRID_SIZE;
       let nextCol = col + 1;
-      while (nextCol < GRID_SIZE && solution[row][nextCol] === ' ') nextCol++;
-      if (nextCol < GRID_SIZE) {
+      while (nextCol < width && solution[row][nextCol] === ' ') nextCol++;
+      if (nextCol < width) {
         const nextInput = document.getElementById(`cell-${row}-${nextCol}`);
         if (nextInput) nextInput.focus();
       }
@@ -180,6 +192,34 @@ export default function BattlePlay() {
         }
       }
     );
+
+    channel.on(
+      "broadcast",
+      { event: "cell_filled" },
+      (msg) => {
+        const { row, col, letter, player } = msg.payload || {};
+        if (player === (user?.id || "guest")) return;
+        if (row == null || col == null) return;
+
+        setOpponentGrid((prev) => {
+          const copy = prev.map((r) => [...r]);
+          copy[row][col] = letter;
+          return copy;
+        });
+      }
+    );
+
+    channel.on("broadcast", { event: "player_finished" }, (msg) => {
+      const { player } = msg.payload || {};
+      if (!player) return;
+
+      // If opponent finished first
+      if (player !== (user?.id || user?.user_id)) {
+        setDidWin(false);
+        setGameOver(true);
+      }
+    });
+
 
     // subscribe and mark ready
     channel.subscribe((status) => {
@@ -235,6 +275,48 @@ export default function BattlePlay() {
     attemptSend();
   };
 
+  // ---------------- broadcast letter ----------------
+  const broadcastCellFill = (row, col, letter) => {
+    // Correct and robust send helper (fixed typo and ensured non-throwing)
+    // if (letter !== correct) return;
+    // get correct letter
+    const correct = String(solution[row][col]).toUpperCase();
+
+    // only broadcast if correct
+    if (letter.toUpperCase() !== correct) return;
+    
+    const trySend = () => {
+      // If channel isn't ready, schedule a retry without throwing
+      if (!battleChannelRef.current || !channelReadyRef.current) {
+        if ((sendRetryRef.current ?? 0) < 10) {
+          sendRetryRef.current = (sendRetryRef.current ?? 0) + 1;
+          setTimeout(trySend, 120);
+        } else {
+          // give up silently (logged)
+          console.warn("Realtime channel not ready; cell_filled not broadcast");
+        }
+        return;
+      }
+      battleChannelRef.current
+        .send({
+          type: "broadcast",
+          event: "cell_filled",
+          payload: {
+            row,
+            col,
+            letter,
+            player: user?.id || "guest",
+          },
+        })
+        .catch((err) => {
+          // swallow errors to avoid crashing the input handler
+          console.warn("broadcast cell_filled error:", err);
+        });
+    };
+    // call the helper
+    trySend();
+  };
+
   // ---------------- Cell focus handler ----------------
   const handleCellFocus = (row, col) => {
     setSelectedCell([row, col]);
@@ -244,16 +326,35 @@ export default function BattlePlay() {
 
   // ---------------- Win Check ----------------
   useEffect(() => {
-    if (!solution.length) return;
-    const allCorrect = solution.every((row, r) => row.every((cell, c) => cell === ' ' || grid[r][c]?.toUpperCase() === cell));
-    if (allCorrect && !isCompleted) setIsCompleted(true);
-  }, [grid, solution, isCompleted]);
+  if (!solution.length) return;
+
+  const allCorrect = solution.every((row, r) =>
+    row.every((cell, c) => cell === ' ' || grid[r][c]?.toUpperCase() === cell)
+  );
+
+  if (allCorrect && !isCompleted) {
+    setIsCompleted(true);
+
+    // Broadcast that this player finished
+    if (battleChannelRef.current && channelReadyRef.current) {
+      battleChannelRef.current.send({
+        type: "broadcast",
+        event: "player_finished",
+        payload: { player: user?.id || user?.user_id },
+      }).catch((err) => console.warn("Error broadcasting finish:", err));
+    }
+
+    setDidWin(true);
+    setGameOver(true);
+  }
+}, [grid, solution, isCompleted]);
+
 
   // ---------------- Progress ----------------
-  const userFilled = grid.flat().filter((c) => c && c !== '').length;
+  const opponentFilled = opponentGrid.flat().filter((c) => c && c !== '').length;
   const totalLetters = solution.flat().filter((c) => c !== ' ').length;
-  const userProgress = solution.length ? Math.round((userFilled / totalLetters) * 100) : 0;
-  
+  const opponentProgress = solution.length ? Math.round((opponentFilled / totalLetters) * 100) : 0;
+
   // ---------------- Loading ----------------
   if (loading) {
     return (
@@ -304,7 +405,6 @@ export default function BattlePlay() {
               </div>
           ))}
         </div>
-        <p className="progress-text user">{userProgress}%</p>
       </div>
 
 
@@ -320,7 +420,9 @@ export default function BattlePlay() {
                   return (
                     <div
                       key={`o-${rIdx}-${cIdx}`}
-                      className={`mini-cell ${solution[rIdx][cIdx] === " " ? "mini-black-cell" : ""} ${
+                      className={`mini-cell ${solution[rIdx][cIdx] === " " ? "mini-black-cell" : ""}
+                      ${opponentGrid?.[rIdx]?.[cIdx] ? "mini-filled-blue" : ""} 
+                      ${
                         isOpponentHere ? "mini-highlight-blue" : ""
                       }`}
                     />
@@ -329,6 +431,7 @@ export default function BattlePlay() {
               </div>
           ))}
         </div>
+        <p className="progress-text opponent">{opponentProgress}%</p>
       </div>
 
     </div>
@@ -397,45 +500,20 @@ export default function BattlePlay() {
       </div>
 
       {/* Win Popup */}
-      {isCompleted && (
+      {gameOver && (
         <div className="popup-overlay">
-          <div className="popup">
-            <div className="logo-container mb-4">
-              <img
-                src={logo}
-                alt="Cross Wars Logo"
-                className="logo"
-              />
-            </div>
-
-            <h2 className="popup-title"> Puzzle Complete!</h2>
-
-            <div className="popup-content">
-              <p className="popup-time">
-                You finished in
-                {' '}
-                <strong>{formatTime(elapsed)}</strong>
-                !
-              </p>
-            </div>
-
-            <div className="popup-actions">
-              <button
-                className="popup-button"
-                onClick={() => {
-                  if (user && session) {
-                    navigate("/dashboard");
-                  } else {
-                    navigate("/guestDashboard");
-                  }
-                }}
-              >
-                Return to Dashboard
-              </button>
-            </div>
+          <div className="popup-inner">
+            <h2>{didWin ? "You Win!" : "Better Luck Next Time"}</h2>
+            {didWin ? (
+              <p>You completed the crossword before your opponent!</p>
+            ) : (
+              <p>Your opponent finished first.</p>
+            )}
+            <button onClick={() => navigate("/dashboard")}>Return Home</button>
           </div>
         </div>
       )}
+
 
     </div>
   );
