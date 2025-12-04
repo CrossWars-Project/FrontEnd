@@ -5,7 +5,6 @@ import { FaSignOutAlt, FaClock } from "react-icons/fa";
 import { UserAuth } from "../../context/AuthContext";
 import supabase from "../../supabaseClient";
 import { API_BASE_URL } from "../../config";
-import logo from '../assets/logo.png'; //import logo image so correct path is used
 
 const GRID_SIZE = 5;
 
@@ -36,18 +35,35 @@ export default function BattlePlay() {
   // ---------------- Selection Tracking ----------------
   const [selectedCell, setSelectedCell] = useState(null); // your selection
   const [opponentSelection, setOpponentSelection] = useState({ row: null, col: null });
-  
+  const [opponentGrid, setOpponentGrid] = useState([]);
 
   // ---------------- Fetch Crossword ----------------
   const hasFetchedRef = useRef(false);
 
+  // ---------------- Win State ----------------
+  const [gameOver, setGameOver] = useState(false);
+  const [didWin, setDidWin] = useState(null); // true = win, false = lose
+  const [inputDisabled, setInputDisabled] = useState(false);
+
+
+
   const handleSignOut = () => {
-    if (user && session) {
-      navigate('/dashboard'); // logged-in dashboard
-    } else {
-      navigate('/guestDashboard'); // guest dashboard
-    }
+  if (session?.user?.id) {
+    navigate('/dashboard');
+  } else {
+    navigate('/guestDashboard');
+  }
+};
+
+  const getPlayerId = () => {
+    // Logged-in user
+    if (user?.id) return user.id;
+    if (user?.user_id) return user.user_id;
+
+    // Guest only if manually triggered, not automatic fallback
+    return null;
   };
+
 
   const formatTime = (secs) => {
     const m = Math.floor(secs / 60);
@@ -112,12 +128,13 @@ export default function BattlePlay() {
 
         setSolution(formattedGrid);
         setGrid(formattedGrid.map((r) => r.map((c) => (c === ' ' ? null : ''))));
+        setOpponentGrid(formattedGrid.map((r) => r.map((c) => (c === ' ' ? null : ''))));
         setCluesAcross(numberedAcross);
         setCluesDown(numberedDown);
         setNumberedCells(numbered);
         setStartTime(Date.now());
+        await startBattle();
         setLoading(false);
-        // setCrosswordFetched(true);
       } catch (err) {
         console.error('Error fetching crossword:', err);
         setLoading(false);
@@ -140,11 +157,18 @@ export default function BattlePlay() {
     if (solution[row][col] === ' ') return;
     const newGrid = grid.map((r) => [...r]);
     const letter = value.slice(-1).toUpperCase();
+    
     if (/^[A-Z]$/.test(letter)) {
       newGrid[row][col] = letter;
+      try {
+        broadcastCellFill(row, col, letter);
+      } catch (err) {
+        console.warn("broadcastCellFill threw:", err);
+      }
+      const width = solution[0]?.length ?? GRID_SIZE;
       let nextCol = col + 1;
-      while (nextCol < GRID_SIZE && solution[row][nextCol] === ' ') nextCol++;
-      if (nextCol < GRID_SIZE) {
+      while (nextCol < width && solution[row][nextCol] === ' ') nextCol++;
+      if (nextCol < width) {
         const nextInput = document.getElementById(`cell-${row}-${nextCol}`);
         if (nextInput) nextInput.focus();
       }
@@ -181,13 +205,55 @@ export default function BattlePlay() {
       }
     );
 
+    channel.on(
+      "broadcast",
+      { event: "cell_filled" },
+      (msg) => {
+        const { row, col, letter, player } = msg.payload || {};
+        if (player === (user?.id || "guest")) return;
+        if (row == null || col == null) return;
+
+        setOpponentGrid((prev) => {
+          const copy = prev.map((r) => [...r]);
+          copy[row][col] = letter;
+          return copy;
+        });
+      }
+    );
+
+    channel.on("broadcast", { event: "player_finished" }, async (msg) => {
+      try {
+        // Lock the board immediately to prevent loser from continuing
+        setInputDisabled(true);
+        setIsCompleted(true); // stops timer updates and prevents triggering completeBattle if they somehow completed simultaneously
+
+        // Try to fetch battle info to learn who won (backend authoritative)
+        const battleRes = await fetch(`${API_BASE_URL}/api/battles/${battleId}`);
+        const battleData = await battleRes.json();
+
+        const winnerId = battleData.battle?.winner_id;
+        // const myId = session?.user?.id || user?.id || user?.user_id;
+        const myId = getPlayerId();
+
+
+        setDidWin(myId === winnerId);
+        setGameOver(true);
+      } catch (err) {
+        console.error("Error handling player_finished:", err);
+        // Even on error, freeze the board so the loser can't keep typing
+        setInputDisabled(true);
+        setIsCompleted(true);
+        setDidWin(false);
+        setGameOver(true);
+      }
+    });
+
     // subscribe and mark ready
     channel.subscribe((status) => {
       if (status === "SUBSCRIBED") {
         battleChannelRef.current = channel;
         channelReadyRef.current = true;
         sendRetryRef.current = 0;
-        // console.log("Supabase realtime subscribed to", battleId);
       }
     });
 
@@ -224,7 +290,9 @@ export default function BattlePlay() {
         payload: {
           row,
           col,
-          player: user?.user_id || user?.id || "guest",
+          //player: user?.user_id || user?.id || "guest",
+          player: getPlayerId(),
+
 
         },
       }).catch((err) => {
@@ -235,25 +303,182 @@ export default function BattlePlay() {
     attemptSend();
   };
 
+  // ---------------- broadcast letter ----------------
+  const broadcastCellFill = (row, col, letter) => {
+    const correct = String(solution[row][col]).toUpperCase();
+
+    // only broadcast if correct
+    if (letter.toUpperCase() !== correct) return;
+    
+    const trySend = () => {
+      // If channel isn't ready, schedule a retry without throwing
+      if (!battleChannelRef.current || !channelReadyRef.current) {
+        if ((sendRetryRef.current ?? 0) < 10) {
+          sendRetryRef.current = (sendRetryRef.current ?? 0) + 1;
+          setTimeout(trySend, 120);
+        } else {
+          // give up silently (logged)
+          console.warn("Realtime channel not ready; cell_filled not broadcast");
+        }
+        return;
+      }
+      battleChannelRef.current
+        .send({
+          type: "broadcast",
+          event: "cell_filled",
+          payload: {
+            row,
+            col,
+            letter,
+            // player: user?.id || "guest",
+            player: getPlayerId(),
+
+          },
+        })
+        .catch((err) => {
+          console.warn("broadcast cell_filled error:", err);
+        });
+    };
+    // call the helper
+    trySend();
+  };
+
+  const broadcastPlayerFinished = () => {
+    const trySend = () => {
+      if (!battleChannelRef.current || !channelReadyRef.current) {
+        if ((sendRetryRef.current ?? 0) < 10) {
+          sendRetryRef.current = (sendRetryRef.current ?? 0) + 1;
+          setTimeout(trySend, 120);
+        } 
+        return;
+      }
+
+      battleChannelRef.current.send({
+        type: "broadcast",
+        event: "player_finished",
+        payload: {
+          // player: user?.id || user?.user_id || "guest",
+          player: getPlayerId(),
+
+        },
+      }).catch((err) => {
+        console.warn("broadcast player_finished error:", err);
+      });
+    };
+
+    trySend();
+  };
+
+
   // ---------------- Cell focus handler ----------------
   const handleCellFocus = (row, col) => {
     setSelectedCell([row, col]);
     broadcastSelection(row, col);
   };
+// ---------------- Start Battle Once ----------------
+async function startBattle() {
+  try {
+    const accessToken = session?.access_token;
+
+    await fetch(`${API_BASE_URL}/api/battles/${battleId}/start`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
+      },
+    });
+
+  } catch (err) {
+    console.error("Error starting battle:", err);
+  }
+}
 
 
   // ---------------- Win Check ----------------
-  useEffect(() => {
-    if (!solution.length) return;
-    const allCorrect = solution.every((row, r) => row.every((cell, c) => cell === ' ' || grid[r][c]?.toUpperCase() === cell));
-    if (allCorrect && !isCompleted) setIsCompleted(true);
-  }, [grid, solution, isCompleted]);
+useEffect(() => {
+  if (!solution.length) return;
+  if (isCompleted) return;
+
+  const allCorrect = solution.every((row, r) =>
+    row.every((cell, c) => cell === ' ' || grid[r][c]?.toUpperCase() === cell)
+  );
+
+  if (allCorrect && !isCompleted) {
+    setIsCompleted(true);
+    setInputDisabled(true);
+    completeBattle();
+  }
+
+  async function completeBattle() {
+      try {
+        // If another finish event already happened, bail out
+        if (gameOver) return;
+
+        // Determine current player's ID
+        const myId = getPlayerId();
+
+        const accessToken = session?.access_token;
+
+        // Attempt to mark the battle completed on the backend
+        const res = await fetch(`${API_BASE_URL}/api/battles/${battleId}/complete`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(accessToken && { "Authorization": `Bearer ${accessToken}` }),
+          },
+          body: JSON.stringify({}) // backend uses current_user optional dependency
+        });
+
+        const data = await res.json();
+
+        // Error handling
+        if (!res.ok) {
+          console.error("Complete API returned error:", data);
+
+          // Battle no longer in progress, stop further input
+          setInputDisabled(true);
+          setIsCompleted(true);
+
+          // Try to read current battle to show correct popup
+          try {
+            const battleRes = await fetch(`${API_BASE_URL}/api/battles/${battleId}`);
+            const battleData = await battleRes.json();
+            const winnerId = battleData.battle?.winner_id;
+
+            // Update UI to reflect winner
+            setDidWin(myId === winnerId);
+            setGameOver(true);
+          } catch (e) {
+            // Fallback if fetching battle fails
+            console.error("Error fetching battle after failed complete:", e);
+            setDidWin(false);
+            setGameOver(true);
+          }
+          // Exit the function since the battle cannot be completed normally
+          return;
+        }
+
+        // Success path
+        // Battle was completed successfully
+          // Determine if the current player is the winner
+          // Mark game as over
+          // Broadcast to opponent so their game stops
+        setDidWin(myId === data.winner_id);
+        setGameOver(true);
+        broadcastPlayerFinished();
+      } catch (err) {
+        console.error("Error completing battle:", err);
+      }
+    }
+}, [grid, solution, isCompleted]);
+
+
 
   // ---------------- Progress ----------------
-  const userFilled = grid.flat().filter((c) => c && c !== '').length;
+  const opponentFilled = opponentGrid.flat().filter((c) => c && c !== '').length;
   const totalLetters = solution.flat().filter((c) => c !== ' ').length;
-  const userProgress = solution.length ? Math.round((userFilled / totalLetters) * 100) : 0;
-  
+  const opponentProgress = solution.length ? Math.round((opponentFilled / totalLetters) * 100) : 0;
+
   // ---------------- Loading ----------------
   if (loading) {
     return (
@@ -304,7 +529,6 @@ export default function BattlePlay() {
               </div>
           ))}
         </div>
-        <p className="progress-text user">{userProgress}%</p>
       </div>
 
 
@@ -320,7 +544,9 @@ export default function BattlePlay() {
                   return (
                     <div
                       key={`o-${rIdx}-${cIdx}`}
-                      className={`mini-cell ${solution[rIdx][cIdx] === " " ? "mini-black-cell" : ""} ${
+                      className={`mini-cell ${solution[rIdx][cIdx] === " " ? "mini-black-cell" : ""}
+                      ${opponentGrid?.[rIdx]?.[cIdx] ? "mini-filled-blue" : ""} 
+                      ${
                         isOpponentHere ? "mini-highlight-blue" : ""
                       }`}
                     />
@@ -329,6 +555,7 @@ export default function BattlePlay() {
               </div>
           ))}
         </div>
+        <p className="progress-text opponent">{opponentProgress}%</p>
       </div>
 
     </div>
@@ -353,8 +580,9 @@ export default function BattlePlay() {
                         maxLength="1"
                         className="cell"
                         value={cell || ""}
-                        onChange={(e) => handleInput(rIdx, cIdx, e.target.value)}
-                        onFocus={() => handleCellFocus(rIdx, cIdx)}
+                        onChange={(e) => !inputDisabled && handleInput(rIdx, cIdx, e.target.value)}
+                        onFocus={() => !inputDisabled && handleCellFocus(rIdx, cIdx)}
+                        disabled={inputDisabled}
                       />
                     </>
                   )}
@@ -397,46 +625,19 @@ export default function BattlePlay() {
       </div>
 
       {/* Win Popup */}
-      {isCompleted && (
+      {gameOver && (
         <div className="popup-overlay">
-          <div className="popup">
-            <div className="logo-container mb-4">
-              <img
-                src={logo}
-                alt="Cross Wars Logo"
-                className="logo"
-              />
-            </div>
-
-            <h2 className="popup-title"> Puzzle Complete!</h2>
-
-            <div className="popup-content">
-              <p className="popup-time">
-                You finished in
-                {' '}
-                <strong>{formatTime(elapsed)}</strong>
-                !
-              </p>
-            </div>
-
-            <div className="popup-actions">
-              <button
-                className="popup-button"
-                onClick={() => {
-                  if (user && session) {
-                    navigate("/dashboard");
-                  } else {
-                    navigate("/guestDashboard");
-                  }
-                }}
-              >
-                Return to Dashboard
-              </button>
-            </div>
+          <div className="popup-inner">
+            <h2>{didWin ? "You Win!" : "Better Luck Next Time"}</h2>
+            {didWin ? (
+              <p>You completed the crossword before your opponent!</p>
+            ) : (
+              <p>Your opponent finished first.</p>
+            )}
+            <button onClick={() => navigate("/dashboard")}>Return Home</button>
           </div>
         </div>
       )}
-
     </div>
   );
 }
