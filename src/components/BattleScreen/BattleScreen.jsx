@@ -5,7 +5,6 @@ import { FaSignOutAlt, FaClock } from "react-icons/fa";
 import { UserAuth } from "../../context/AuthContext";
 import supabase from "../../supabaseClient";
 import { API_BASE_URL } from "../../config";
-import logo from '../assets/logo.png'; //import logo image so correct path is used
 
 const GRID_SIZE = 5;
 
@@ -44,15 +43,27 @@ export default function BattlePlay() {
   // ---------------- Win State ----------------
   const [gameOver, setGameOver] = useState(false);
   const [didWin, setDidWin] = useState(null); // true = win, false = lose
+  const [inputDisabled, setInputDisabled] = useState(false);
+
 
 
   const handleSignOut = () => {
-    if (user && session) {
-      navigate('/dashboard'); // logged-in dashboard
-    } else {
-      navigate('/guestDashboard'); // guest dashboard
-    }
+  if (session?.user?.id) {
+    navigate('/dashboard');
+  } else {
+    navigate('/guestDashboard');
+  }
+};
+
+  const getPlayerId = () => {
+    // Logged-in user
+    if (user?.id) return user.id;
+    if (user?.user_id) return user.user_id;
+
+    // Guest only if manually triggered, not automatic fallback
+    return null;
   };
+
 
   const formatTime = (secs) => {
     const m = Math.floor(secs / 60);
@@ -122,6 +133,7 @@ export default function BattlePlay() {
         setCluesDown(numberedDown);
         setNumberedCells(numbered);
         setStartTime(Date.now());
+        await startBattle();
         setLoading(false);
       } catch (err) {
         console.error('Error fetching crossword:', err);
@@ -209,17 +221,32 @@ export default function BattlePlay() {
       }
     );
 
-    channel.on("broadcast", { event: "player_finished" }, (msg) => {
-      const { player } = msg.payload || {};
-      if (!player) return;
+    channel.on("broadcast", { event: "player_finished" }, async (msg) => {
+      try {
+        // Lock the board immediately to prevent loser from continuing
+        setInputDisabled(true);
+        setIsCompleted(true); // stops timer updates and prevents triggering completeBattle if they somehow completed simultaneously
 
-      // If opponent finished first
-      if (player !== (user?.id || user?.user_id)) {
+        // Try to fetch battle info to learn who won (backend authoritative)
+        const battleRes = await fetch(`${API_BASE_URL}/api/battles/${battleId}`);
+        const battleData = await battleRes.json();
+
+        const winnerId = battleData.battle?.winner_id;
+        // const myId = session?.user?.id || user?.id || user?.user_id;
+        const myId = getPlayerId();
+
+
+        setDidWin(myId === winnerId);
+        setGameOver(true);
+      } catch (err) {
+        console.error("Error handling player_finished:", err);
+        // Even on error, freeze the board so the loser can't keep typing
+        setInputDisabled(true);
+        setIsCompleted(true);
         setDidWin(false);
         setGameOver(true);
       }
     });
-
 
     // subscribe and mark ready
     channel.subscribe((status) => {
@@ -227,7 +254,6 @@ export default function BattlePlay() {
         battleChannelRef.current = channel;
         channelReadyRef.current = true;
         sendRetryRef.current = 0;
-        // console.log("Supabase realtime subscribed to", battleId);
       }
     });
 
@@ -264,7 +290,9 @@ export default function BattlePlay() {
         payload: {
           row,
           col,
-          player: user?.user_id || user?.id || "guest",
+          //player: user?.user_id || user?.id || "guest",
+          player: getPlayerId(),
+
 
         },
       }).catch((err) => {
@@ -277,9 +305,6 @@ export default function BattlePlay() {
 
   // ---------------- broadcast letter ----------------
   const broadcastCellFill = (row, col, letter) => {
-    // Correct and robust send helper (fixed typo and ensured non-throwing)
-    // if (letter !== correct) return;
-    // get correct letter
     const correct = String(solution[row][col]).toUpperCase();
 
     // only broadcast if correct
@@ -305,11 +330,12 @@ export default function BattlePlay() {
             row,
             col,
             letter,
-            player: user?.id || "guest",
+            // player: user?.id || "guest",
+            player: getPlayerId(),
+
           },
         })
         .catch((err) => {
-          // swallow errors to avoid crashing the input handler
           console.warn("broadcast cell_filled error:", err);
         });
     };
@@ -317,16 +343,61 @@ export default function BattlePlay() {
     trySend();
   };
 
+  const broadcastPlayerFinished = () => {
+    const trySend = () => {
+      if (!battleChannelRef.current || !channelReadyRef.current) {
+        if ((sendRetryRef.current ?? 0) < 10) {
+          sendRetryRef.current = (sendRetryRef.current ?? 0) + 1;
+          setTimeout(trySend, 120);
+        } 
+        return;
+      }
+
+      battleChannelRef.current.send({
+        type: "broadcast",
+        event: "player_finished",
+        payload: {
+          // player: user?.id || user?.user_id || "guest",
+          player: getPlayerId(),
+
+        },
+      }).catch((err) => {
+        console.warn("broadcast player_finished error:", err);
+      });
+    };
+
+    trySend();
+  };
+
+
   // ---------------- Cell focus handler ----------------
   const handleCellFocus = (row, col) => {
     setSelectedCell([row, col]);
     broadcastSelection(row, col);
   };
+// ---------------- Start Battle Once ----------------
+async function startBattle() {
+  try {
+    const accessToken = session?.access_token;
+
+    await fetch(`${API_BASE_URL}/api/battles/${battleId}/start`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
+      },
+    });
+
+  } catch (err) {
+    console.error("Error starting battle:", err);
+  }
+}
 
 
   // ---------------- Win Check ----------------
-  useEffect(() => {
+useEffect(() => {
   if (!solution.length) return;
+  if (isCompleted) return;
 
   const allCorrect = solution.every((row, r) =>
     row.every((cell, c) => cell === ' ' || grid[r][c]?.toUpperCase() === cell)
@@ -334,20 +405,66 @@ export default function BattlePlay() {
 
   if (allCorrect && !isCompleted) {
     setIsCompleted(true);
-
-    // Broadcast that this player finished
-    if (battleChannelRef.current && channelReadyRef.current) {
-      battleChannelRef.current.send({
-        type: "broadcast",
-        event: "player_finished",
-        payload: { player: user?.id || user?.user_id },
-      }).catch((err) => console.warn("Error broadcasting finish:", err));
-    }
-
-    setDidWin(true);
-    setGameOver(true);
+    setInputDisabled(true);
+    completeBattle();
   }
+
+  async function completeBattle() {
+      try {
+        // If another finish event already happened, bail out
+        if (gameOver) return;
+
+        // const myId = session?.user?.id || user?.id || "guest";
+        const myId = getPlayerId();
+
+        const accessToken = session?.access_token;
+
+        const res = await fetch(`${API_BASE_URL}/api/battles/${battleId}/complete`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(accessToken && { "Authorization": `Bearer ${accessToken}` }),
+          },
+          body: JSON.stringify({}) // backend uses current_user optional dependency
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          console.error("Complete API returned error:", data);
+          // If backend says battle not in progress or someone else already won,
+          // ensure we reflect that state and lock inputs
+          setInputDisabled(true);
+          setIsCompleted(true);
+
+          // Try to read current battle to show correct popup
+          try {
+            const battleRes = await fetch(`${API_BASE_URL}/api/battles/${battleId}`);
+            const battleData = await battleRes.json();
+            const winnerId = battleData.battle?.winner_id;
+            setDidWin(myId === winnerId);
+            setGameOver(true);
+          } catch (e) {
+            console.error("Error fetching battle after failed complete:", e);
+            setDidWin(false);
+            setGameOver(true);
+          }
+
+          return;
+        }
+
+        // success path
+        setDidWin(myId === data.winner_id);
+        setGameOver(true);
+
+        // broadcast so opponent freezes immediately
+        broadcastPlayerFinished();
+      } catch (err) {
+        console.error("Error completing battle:", err);
+      }
+    }
 }, [grid, solution, isCompleted]);
+
 
 
   // ---------------- Progress ----------------
@@ -456,8 +573,9 @@ export default function BattlePlay() {
                         maxLength="1"
                         className="cell"
                         value={cell || ""}
-                        onChange={(e) => handleInput(rIdx, cIdx, e.target.value)}
-                        onFocus={() => handleCellFocus(rIdx, cIdx)}
+                        onChange={(e) => !inputDisabled && handleInput(rIdx, cIdx, e.target.value)}
+                        onFocus={() => !inputDisabled && handleCellFocus(rIdx, cIdx)}
+                        disabled={inputDisabled}
                       />
                     </>
                   )}
@@ -513,8 +631,6 @@ export default function BattlePlay() {
           </div>
         </div>
       )}
-
-
     </div>
   );
 }
