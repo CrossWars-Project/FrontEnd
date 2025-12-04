@@ -414,11 +414,12 @@ useEffect(() => {
         // If another finish event already happened, bail out
         if (gameOver) return;
 
-        // const myId = session?.user?.id || user?.id || "guest";
+        // Determine current player's ID
         const myId = getPlayerId();
 
         const accessToken = session?.access_token;
 
+        // Attempt to mark the battle completed on the backend
         const res = await fetch(`${API_BASE_URL}/api/battles/${battleId}/complete`, {
           method: "POST",
           headers: {
@@ -430,10 +431,11 @@ useEffect(() => {
 
         const data = await res.json();
 
+        // Error handling
         if (!res.ok) {
           console.error("Complete API returned error:", data);
-          // If backend says battle not in progress or someone else already won,
-          // ensure we reflect that state and lock inputs
+
+          // Battle no longer in progress, stop further input
           setInputDisabled(true);
           setIsCompleted(true);
 
@@ -442,22 +444,27 @@ useEffect(() => {
             const battleRes = await fetch(`${API_BASE_URL}/api/battles/${battleId}`);
             const battleData = await battleRes.json();
             const winnerId = battleData.battle?.winner_id;
+
+            // Update UI to reflect winner
             setDidWin(myId === winnerId);
             setGameOver(true);
           } catch (e) {
+            // Fallback if fetching battle fails
             console.error("Error fetching battle after failed complete:", e);
             setDidWin(false);
             setGameOver(true);
           }
-
+          // Exit the function since the battle cannot be completed normally
           return;
         }
 
-        // success path
+        // Success path
+        // Battle was completed successfully
+          // Determine if the current player is the winner
+          // Mark game as over
+          // Broadcast to opponent so their game stops
         setDidWin(myId === data.winner_id);
         setGameOver(true);
-
-        // broadcast so opponent freezes immediately
         broadcastPlayerFinished();
       } catch (err) {
         console.error("Error completing battle:", err);
