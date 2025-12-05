@@ -626,8 +626,8 @@ useEffect(() => {
 
       {/* Win Popup */}
       {gameOver && (
-        <div className="popup-overlay">
-          <div className="popup-inner">
+        <div className="battle-popup-overlay">
+          <div className="battle-popup-inner">
             <h2>{didWin ? "You Win!" : "Better Luck Next Time"}</h2>
             {didWin ? (
               <p>You completed the crossword before your opponent!</p>

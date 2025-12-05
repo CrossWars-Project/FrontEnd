@@ -31,6 +31,7 @@
 
 .progress-item {
   text-align: center;
+  color: black;
 }
 
 .progress-text {
@@ -183,7 +184,7 @@
 }
 
 /* Popup overlay */
-.popup-overlay {
+.battle-popup-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -197,7 +198,7 @@
 }
 
 /* Popup box */
-.popup {
+.battle-popup {
   background-color: #fff;
   padding: 40px 60px;
   border-radius: 8px;
@@ -264,7 +265,7 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-.popup {
+.battle-popup {
   position: fixed;
   inset: 0;
   display: flex;
@@ -276,12 +277,13 @@
   margin: auto;
 }
 
-.popup-inner {
+.battle-popup-inner {
   background: white;
   padding: 30px 40px;
   border-radius: 12px;
   text-align: center;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  color: black;
 }
 
 .timer {
