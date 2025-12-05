@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   FaCog, FaSignOutAlt, FaUserFriends, FaUser, FaHashtag,
 } from 'react-icons/fa';
+import logo from '../assets/logo.png';
 
 export default function Stats({ userStats }) {
   const { user } = UserAuth();
@@ -62,7 +63,7 @@ export default function Stats({ userStats }) {
   return (
     <div className="stats-container">
       <div className="logo-container">
-        <img src="src/components/assets/logo.png" alt="Cross Wars Logo" className="logo" />
+        <img src={logo} alt="Cross Wars Logo" className="logo" />
       </div>
       <div className="top-buttons">
         <button
