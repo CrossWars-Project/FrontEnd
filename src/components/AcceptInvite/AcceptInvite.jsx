@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import supabase from "../../supabaseClient";
 import { API_BASE_URL } from "../../config";
@@ -7,6 +7,8 @@ export default function AcceptInvite() {
   const { inviteToken } = useParams();
   const navigate = useNavigate();
   const hasRun = useRef(false);
+
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     if (hasRun.current) return;
@@ -63,13 +65,37 @@ export default function AcceptInvite() {
         });
 
       } catch (err) {
-        console.error(err);
-        navigate("/", { replace: true });
+        // console.error(err);
+        // navigate("/", { replace: true });
+        console.error("Invite error:", err);
+        setErrorMessage(err.message || "An unknown error occurred.");
       }
     }
 
     acceptInvite();
   }, [inviteToken, navigate]);
+
+  // If there's an error, show popup
+  if (errorMessage) {
+    const isGuest = sessionStorage.getItem("guestUser") === "true";
+    const homeRoute = isGuest ? "/" : "/home";
+
+    return (
+      <div className="popup-overlay">
+        <div className="popup">
+          <h2 className="popup-title">Invite Error</h2>
+          <p>{errorMessage}</p>
+
+          <button
+            onClick={() => navigate(homeRoute, { replace: true })}
+            className="popup-button"
+          >
+            Return Home
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ padding: "2rem", textAlign: "center" }}>
