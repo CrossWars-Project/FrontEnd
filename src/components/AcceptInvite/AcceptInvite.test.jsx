@@ -84,7 +84,7 @@ describe("AcceptInvite", () => {
     });
   });
 
-  it("shows error popup and navigates home when button clicked", async () => {
+  it("shows error popup and navigates home to dashboardwhen button clicked", async () => {
     supabase.auth.getSession.mockResolvedValue({
       data: { session: { access_token: "token" } },
     });
