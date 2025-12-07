@@ -58,6 +58,24 @@ export const updateUserStats = async (userStats, token) => {
   return res.data;
 };
 
+// updates a user's battle stats after a battle game
+// result should include winner_id to indicate who won and elapsed time.
+export const updateBattleStats = async (payload, token) => {
+  if (!token) {
+    // Guest user → backend will just ignore, but we skip the call to avoid noise
+    return { success: true, message: 'Guest user - no stats updated.' };
+  }
+
+  const res = await API.put('/stats/update_battle_stats', payload, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  return res.data;
+};
+
 export const loginUser = async (credentials) => {
   const res = await API.post('/login', credentials); // backend login route
   return res.data;

@@ -85,7 +85,7 @@ export default function Stats({ userStats }) {
         {/* --- Row 1: Battle stats (move these above the solo stats) --- */}
         {/* Battle Streak */}
         <div className="stat-item">
-          <h3>Battle Streak</h3>
+          <h3>Battle Win Streak</h3>
           <div className="stat-box">
             <p className="stat-value">{displayStats.streak_count_battle}</p>
             <p className="stat-label">days</p>
@@ -113,7 +113,7 @@ export default function Stats({ userStats }) {
         {/* --- Row 2: Solo stats --- */}
         {/* Solo Streak */}
         <div className="stat-item">
-          <h3>Solo Streak</h3>
+          <h3>Solo Completion Streak</h3>
           <div className="stat-box">
             <p className="stat-value">{displayStats.streak_count_solo}</p>
             <p className="stat-label">days</p>
