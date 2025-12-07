@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import supabase from '../../supabaseClient';
 import { useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../../config';
+import { FaCopy, FaEnvelope, FaWhatsapp} from 'react-icons/fa';
+import './BattleInvite.css';
 
 
 function BattleInvite({ onClose, onCreated }) {
@@ -74,64 +76,96 @@ function BattleInvite({ onClose, onCreated }) {
     alert('Invite link copied to clipboard!');
   }
 
+  function shareViaEmail() {
+    const subject = encodeURIComponent('Join me for a CrossWars battle!');
+    const body = encodeURIComponent(`Hey! I challenge you to a CrossWars battle. Click this link to accept: ${inviteLink}`);
+    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+  }
+
+  function shareViaWhatsApp() {
+    const text = encodeURIComponent(`Hey! I challenge you to a CrossWars battle. Click this link to accept: ${inviteLink}`);
+    window.open(`https://wa.me/?text=${text}`, '_blank');
+  }
+
   
   if (loading) {
     return (
-      <div>
+      <>
         <h2>Battle Invite</h2>
         <p>Creating your battle invite...</p>
-      </div>
+      </>
     );
   }
 
   if (error) {
     return (
-      <div>
+      <>
         <h2>Battle Invite</h2>
-        <div style={{ color: 'red' }}>
+        <div className="error-message">
           <p>
             Error:
             {error}
           </p>
           <button onClick={createInvite}>Try Again</button>
         </div>
-      </div>
+      </>
     );
   }
 
   // Show success state with invite link
   return (
-    <div>
+    <>
       <h2>Battle Invite</h2>
       {inviteLink && (
         <div>
           <p>Share this link with your friend:</p>
-          <a href={inviteLink} target="_blank" rel="noopener noreferrer">
-            {inviteLink}
-          </a>
-          <br />
-          <button onClick={copyLink}>Copy Link</button>
+          <div className="invite-link-container">
+            <input 
+              type="text" 
+              value={inviteLink} 
+              readOnly 
+              className="invite-link-input"
+            />
+            <button 
+              onClick={copyLink}
+              title="Copy link"
+              className="copy-button"
+            >
+              <FaCopy /> Copy
+            </button>
+          </div>
+
+          <div className="share-section">
+            <p className="share-label">Or share via:</p>
+            <div className="share-buttons">
+              <button 
+                onClick={shareViaEmail}
+                className="share-button"
+                title="Share via Email"
+              >
+                <FaEnvelope />
+              </button>
+              <button 
+                onClick={shareViaWhatsApp}
+                className="share-button"
+                title="Share via WhatsApp"
+              >
+                <FaWhatsapp />
+              </button>
+            </div>
+          </div>
 
           {battleId && (
             <button
-              style={{ marginLeft: "10px",
-                       marginRight: "10px"   
-               }}
+              className="action-button"
               onClick={() => navigate(`/battle-room/${battleId}`)}
-              
             >
               Go to Battle Room
             </button>
           )}
-
-          {onClose && (
-            <button onClick={onClose}>
-              Close
-            </button>
-          )}
         </div>
       )}
-    </div>
+    </>
   );
 }
 

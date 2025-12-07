@@ -61,8 +61,12 @@ describe('BattleInvite', () => {
 
     await waitFor(() => {
       expect(screen.getByText(/Share this link/i)).toBeInTheDocument();
-      expect(screen.getByText('http://localhost/accept/abc123')).toBeInTheDocument();
-      expect(screen.getByText('Copy Link')).toBeInTheDocument();
+      expect(screen.getByDisplayValue('http://localhost/accept/abc123')).toBeInTheDocument();
+      expect(screen.getByText('Copy')).toBeInTheDocument();
+      expect(screen.getByText('Or share via:')).toBeInTheDocument();
+      expect(screen.getByTitle('Share via Email')).toBeInTheDocument();
+      expect(screen.getByTitle('Share via WhatsApp')).toBeInTheDocument();
+      expect(screen.getByText('Go to Battle Room')).toBeInTheDocument();
     });
   });
 
@@ -75,9 +79,48 @@ describe('BattleInvite', () => {
 
     renderWithRouter(<BattleInvite />);
 
-    await waitFor(() => screen.getByText('Copy Link'));
-    fireEvent.click(screen.getByText('Copy Link'));
+    await waitFor(() => screen.getByText('Copy'));
+    fireEvent.click(screen.getByText('Copy'));
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith('http://localhost/accept/abc123');
     expect(global.alert).toHaveBeenCalledWith('Invite link copied to clipboard!');
+  });
+
+  it('shows email and whatsapp share buttons', async () => {
+    mockSupabase.auth.getSession.mockResolvedValue({ data: { session: { access_token: 'token' } } });
+    global.fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ invite_token: 'abc123', battle_id: 'battle1' }),
+    });
+
+    renderWithRouter(<BattleInvite />);
+
+    await waitFor(() => {
+      expect(screen.getByTitle('Share via Email')).toBeInTheDocument();
+      expect(screen.getByTitle('Share via WhatsApp')).toBeInTheDocument();
+    });
+  });
+
+  it('opens WhatsApp when WhatsApp share button clicked', async () => {
+    mockSupabase.auth.getSession.mockResolvedValue({ data: { session: { access_token: 'token' } } });
+    global.fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ invite_token: 'abc123', battle_id: 'battle1' }),
+    });
+
+    global.open = jest.fn();
+
+    renderWithRouter(<BattleInvite />);
+
+    await waitFor(() => screen.getByTitle('Share via WhatsApp'));
+    fireEvent.click(screen.getByTitle('Share via WhatsApp'));
+    
+    expect(global.open).toHaveBeenCalledWith(
+      expect.stringContaining('https://wa.me/?text='),
+      '_blank'
+    );
+    expect(global.open).toHaveBeenCalledWith(
+      expect.stringContaining('http%3A%2F%2Flocalhost%2Faccept%2Fabc123'),
+      '_blank'
+    );
   });
 });
