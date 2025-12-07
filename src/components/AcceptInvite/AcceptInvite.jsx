@@ -78,7 +78,7 @@ export default function AcceptInvite() {
   // If there's an error, show popup
   if (errorMessage) {
     const isGuest = sessionStorage.getItem("guestUser") === "true";
-    const homeRoute = isGuest ? "/" : "/home";
+    const homeRoute = isGuest ? "/" : "/dashboard";
 
     return (
       <div className="popup-overlay">
