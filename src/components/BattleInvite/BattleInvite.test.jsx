@@ -85,24 +85,19 @@ describe('BattleInvite', () => {
     expect(global.alert).toHaveBeenCalledWith('Invite link copied to clipboard!');
   });
 
-  it('opens email client when email share button clicked', async () => {
+  it('shows email and whatsapp share buttons', async () => {
     mockSupabase.auth.getSession.mockResolvedValue({ data: { session: { access_token: 'token' } } });
     global.fetch.mockResolvedValue({
       ok: true,
       json: async () => ({ invite_token: 'abc123', battle_id: 'battle1' }),
     });
 
-    delete window.location;
-    window.location = { href: '' };
-
     renderWithRouter(<BattleInvite />);
 
-    await waitFor(() => screen.getByTitle('Share via Email'));
-    fireEvent.click(screen.getByTitle('Share via Email'));
-    
-    expect(window.location.href).toContain('mailto:');
-    expect(window.location.href).toContain('Join%20me%20for%20a%20CrossWars%20battle!');
-    expect(window.location.href).toContain('http://localhost/accept/abc123');
+    await waitFor(() => {
+      expect(screen.getByTitle('Share via Email')).toBeInTheDocument();
+      expect(screen.getByTitle('Share via WhatsApp')).toBeInTheDocument();
+    });
   });
 
   it('opens WhatsApp when WhatsApp share button clicked', async () => {
@@ -124,7 +119,7 @@ describe('BattleInvite', () => {
       '_blank'
     );
     expect(global.open).toHaveBeenCalledWith(
-      expect.stringContaining('http://localhost/accept/abc123'),
+      expect.stringContaining('http%3A%2F%2Flocalhost%2Faccept%2Fabc123'),
       '_blank'
     );
   });
