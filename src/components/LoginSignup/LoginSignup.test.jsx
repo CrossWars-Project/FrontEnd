@@ -135,4 +135,36 @@ describe('LoginSignup Component', () => {
     await waitFor(() => expect(UserAuthMock.setGuestMode).toHaveBeenCalled());
     await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('/guestDashboard', { replace: true }));
   });
+
+  it('redirects to invite accept page if redirectTo is provided', async () => {
+    // Use location.state.from to simulate redirect
+    render(
+        <MemoryRouter
+        initialEntries={[{ pathname: '/login', state: { from: '/invite/1234' } }]}
+        >
+        <Routes>
+            <Route path="/login" element={<LoginSignup />} />
+            <Route path="/invite/1234" element={<div>Invite Accept</div>} />
+            <Route path="/dashboard" element={<div>Dashboard</div>} />
+        </Routes>
+        </MemoryRouter>
+    );
+
+    const email = screen.getByPlaceholderText(/email/i);
+    const password = screen.getByPlaceholderText(/password/i);
+
+    fireEvent.change(email, { target: { value: 'user@test.com' } });
+    fireEvent.change(password, { target: { value: 'pass123' } });
+
+    fireEvent.click(screen.getByRole('button', { name: /log in/i }));
+
+    await waitFor(() => {
+        expect(mockNavigate).toHaveBeenCalledWith('/invite/1234', { replace: true });
+    });
+  });
+
+
+  
+
+
 });
