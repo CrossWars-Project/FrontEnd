@@ -5,6 +5,7 @@ import { FaSignOutAlt, FaClock } from "react-icons/fa";
 import { UserAuth } from "../../context/AuthContext";
 import supabase from "../../supabaseClient";
 import { API_BASE_URL } from "../../config";
+import { updateBattleStats } from "../../api";
 
 const GRID_SIZE = 5;
 
@@ -466,10 +467,37 @@ useEffect(() => {
         setDidWin(myId === data.winner_id);
         setGameOver(true);
         broadcastPlayerFinished();
+        //collect variables for stats update
+        const winnerId = data.winner_id;
+        const myElapsed = elapsed;
+        // Call backend stats update
+        sendBattleStats({
+          winnerId,
+          time: myElapsed,
+        });
       } catch (err) {
         console.error("Error completing battle:", err);
       }
     }
+  async function sendBattleStats({ winnerId, time }) {
+  try {
+    const accessToken = session?.access_token;
+    if (!accessToken) return; // skip guest users
+
+    const data = await updateBattleStats(
+      {
+        winner_id: winnerId,
+        fastest_battle_time: time,
+      },
+      accessToken
+    );
+
+    console.log("Battle stats updated:", data);
+  } catch (err) {
+    console.error("Error calling updateBattleStats:", err);
+  }
+}
+
 }, [grid, solution, isCompleted]);
 
 
