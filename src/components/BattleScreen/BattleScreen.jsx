@@ -244,7 +244,7 @@ export default function BattlePlay() {
           await updateBattleStats(
             {
               winner_id: winnerId,
-              fastest_battle_time: elapsed, // loser’s time
+              fastest_battle_time: elapsed,
               dt_last_seen_battle: new Date().toISOString(),
             },
             session.access_token
