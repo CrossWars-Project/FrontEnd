@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import supabase from '../../supabaseClient';
 import { useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../../config';
-import { FaCopy, FaEnvelope, FaWhatsapp, FaTimes } from 'react-icons/fa';
+import { FaCopy, FaEnvelope, FaWhatsapp} from 'react-icons/fa';
 import './BattleInvite.css';
 
 
@@ -90,16 +90,16 @@ function BattleInvite({ onClose, onCreated }) {
   
   if (loading) {
     return (
-      <div>
+      <>
         <h2>Battle Invite</h2>
         <p>Creating your battle invite...</p>
-      </div>
+      </>
     );
   }
 
   if (error) {
     return (
-      <div>
+      <>
         <h2>Battle Invite</h2>
         <div className="error-message">
           <p>
@@ -108,7 +108,7 @@ function BattleInvite({ onClose, onCreated }) {
           </p>
           <button onClick={createInvite}>Try Again</button>
         </div>
-      </div>
+      </>
     );
   }
 
