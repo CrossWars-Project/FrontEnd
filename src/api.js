@@ -63,7 +63,7 @@ export const updateUserStats = async (userStats, token) => {
 export const updateBattleStats = async (payload, token) => {
   if (!token) {
     // Guest user → backend will just ignore, but we skip the call to avoid noise
-    return { success: true, message: "Guest user - no stats updated" };
+    return { success: true, message: 'Guest user - no stats updated.' };
   }
 
   const res = await API.put('/stats/update_battle_stats', payload, {
@@ -75,8 +75,6 @@ export const updateBattleStats = async (payload, token) => {
 
   return res.data;
 };
-
-
 
 export const loginUser = async (credentials) => {
   const res = await API.post('/login', credentials); // backend login route
