@@ -239,6 +239,17 @@ export default function BattlePlay() {
 
         setDidWin(myId === winnerId);
         setGameOver(true);
+        // make sure loser's stats get updated too
+        if (session?.access_token) {
+          await updateBattleStats(
+            {
+              winner_id: winnerId,
+              fastest_battle_time: elapsed, // loser’s time
+              dt_last_seen_battle: new Date().toISOString(),
+            },
+            session.access_token
+          );
+        }
       } catch (err) {
         console.error("Error handling player_finished:", err);
         // Even on error, freeze the board so the loser can't keep typing
@@ -488,6 +499,7 @@ useEffect(() => {
       {
         winner_id: winnerId,
         fastest_battle_time: time,
+        dt_last_seen_battle: new Date().toISOString(),
       },
       accessToken
     );
