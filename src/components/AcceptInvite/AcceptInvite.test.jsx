@@ -108,7 +108,7 @@ describe("AcceptInvite", () => {
     button.click();
 
     // Assert navigation happens AFTER click
-    expect(mockNavigate).toHaveBeenCalledWith("/home", { replace: true });
+    expect(mockNavigate).toHaveBeenCalledWith("/dashboard", { replace: true });
   });
 
 
