@@ -24,10 +24,17 @@ jest.mock("react-router-dom", () => {
 
 describe("AcceptInvite", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    global.fetch = jest.fn();
-    sessionStorage.clear();
-  });
+  jest.clearAllMocks();
+  sessionStorage.clear();
+
+  global.fetch = jest.fn(() =>
+    Promise.resolve({
+      ok: true,
+      json: async () => ({}),
+    })
+  );
+});
+
 
   it("shows joining message initially", () => {
     supabase.auth.getSession.mockResolvedValue({ data: { session: { access_token: "token" } } });
@@ -77,18 +84,33 @@ describe("AcceptInvite", () => {
     });
   });
 
-  it("navigates to home if backend returns error", async () => {
-    supabase.auth.getSession.mockResolvedValue({ data: { session: { access_token: "token" } } });
+  it("shows error popup and navigates home when button clicked", async () => {
+    supabase.auth.getSession.mockResolvedValue({
+      data: { session: { access_token: "token" } },
+    });
     sessionStorage.setItem("guestUser", "false");
 
-    global.fetch.mockResolvedValueOnce({ ok: false });
+    global.fetch.mockResolvedValueOnce({
+      ok: false,
+      json: async () => ({ message: "Invite invalid or expired" }),
+    });
 
     render(<AcceptInvite />);
 
+    // Wait for popup to appear
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith("/", { replace: true });
+      expect(screen.getByText(/invite error/i)).toBeInTheDocument();
+      expect(screen.getByText(/invite invalid or expired/i)).toBeInTheDocument();
     });
+
+    // Click Return Home
+    const button = screen.getByText(/return home/i);
+    button.click();
+
+    // Assert navigation happens AFTER click
+    expect(mockNavigate).toHaveBeenCalledWith("/home", { replace: true });
   });
+
 
   it("handles guest user correctly", async () => {
     supabase.auth.getSession.mockResolvedValue({ data: { session: null } });

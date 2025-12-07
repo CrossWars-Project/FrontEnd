@@ -13,6 +13,21 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Global text colors */
+h2, h3, p {
+  color: #000;
+}
+
+/* Button text color */
+button {
+  color: #000;
+}
+
+.popup-title {
+  color: #000 !important;
+}
+
+
 a {
   font-weight: 500;
   color: #646cff;
