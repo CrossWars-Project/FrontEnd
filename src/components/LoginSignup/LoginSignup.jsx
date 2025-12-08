@@ -86,13 +86,27 @@ function LoginSignup() {
     }
   };
 
-  const handlePlayAsGuest = async () => {
+  /* const handlePlayAsGuest = async () => {
     setGuestMode();
     sessionStorage.setItem("guestUser", "true");
 
     // Navigate back to invite accept page if exists
     navigate(redirectTo, { replace: true });
+  }; */
+  const handlePlayAsGuest = async () => {
+    setGuestMode();
+    sessionStorage.setItem("guestUser", "true");
+
+    // If coming from invite accept, respect that
+    if (redirectTo?.startsWith("/accept")) {
+      navigate(redirectTo, { replace: true });
+      return;
+    }
+
+    // Guests should NEVER go to real dashboard
+    navigate("/guestDashboard", { replace: true });
   };
+
 
   let buttonText = loading ? "Loading..." : action === "Login" ? "Log In" : "Create Account";
 
