@@ -1,46 +1,27 @@
-// checkPlayedToday.test.js
-process.env.TZ = "America/Los_Angeles"; // Force LA timezone for stable tests
-
 import playedToday from "./checkPlayedToday";
 
-describe("playedToday (PST version)", () => {
-  it("returns false for null or undefined dateString", () => {
-    expect(playedToday(null)).toBe(false);
-    expect(playedToday(undefined)).toBe(false);
+// Generate a UTC string corresponding to a PST date/time
+function makeUTCFromPST({ year, month, day, hour, minute = 0, second = 0 }) {
+  return new Date(Date.UTC(year, month, day, hour + 8, minute, second)).toISOString();
+}
+
+describe("playedToday", () => {
+  beforeEach(() => jest.useFakeTimers());
+  afterEach(() => jest.useRealTimers());
+
+  test("returns false when last play was 11pm PST and now is 1am PST next day", () => {
+    const lastPlayUTC = makeUTCFromPST({ year: 2025, month: 0, day: 1, hour: 23 });
+    const now = new Date(Date.UTC(2025, 0, 2, 9, 0)); // Jan 2, 01:00 PST = 09:00 UTC
+    jest.setSystemTime(now);
+
+    expect(playedToday(lastPlayUTC)).toBe(false);
   });
 
-  it("returns false for a date that is not today", () => {
-    const now = new Date();
+  test("returns true when last play was 9pm PST and now is 11pm PST same day", () => {
+    const lastPlayUTC = makeUTCFromPST({ year: 2025, month: 0, day: 1, hour: 21 });
+    const now = new Date(Date.UTC(2025, 0, 2, 7, 0)); // Jan 1, 23:00 PST = Jan 2, 07:00 UTC
+    jest.setSystemTime(now);
 
-    const yesterday = new Date(now);
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    expect(playedToday(yesterday.toISOString())).toBe(false);
-
-    const lastWeek = new Date(now);
-    lastWeek.setDate(lastWeek.getDate() - 7);
-
-    expect(playedToday(lastWeek.toISOString())).toBe(false);
+    expect(playedToday(lastPlayUTC)).toBe(true);
   });
-
-  it("returns true for a date that is today", () => {
-    const now = new Date();
-    expect(playedToday(now.toISOString())).toBe(true);
-  });
-
-  it("handles edge case near midnight correctly", () => {
-    const laNow = new Date();
-    laNow.setHours(23, 50, 0, 0);
-
-    const justNow = new Date(laNow);
-    expect(playedToday(justNow.toISOString())).toBe(true);
-
-    // Simulate 20 minutes later → next LA calendar day
-    const laNextDay = new Date(laNow);
-    laNextDay.setMinutes(laNow.getMinutes() + 20);
-
-    // Should be false because it's tomorrow in LA time
-    expect(playedToday(laNextDay.toISOString())).toBe(false);
-  });
-
 });

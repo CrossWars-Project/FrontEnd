@@ -1,22 +1,21 @@
-// helper function which checks if the user has already played today.
 export default function playedToday(dateString) {
   if (!dateString) return false;
 
-  const playedUTC = new Date(dateString); // this is UTC from Supabase
-  const playedLA = toLA(playedUTC);
+  const inputUTC = new Date(dateString);
+  if (isNaN(inputUTC)) return false;
 
-  const nowLA = toLA(new Date());
+  // Convert both dates into America/Los_Angeles calendar time
+  const inputLocal = new Date(
+    inputUTC.toLocaleString("en-US", { timeZone: "America/Los_Angeles" })
+  );
+
+  const nowLocal = new Date(
+    new Date().toLocaleString("en-US", { timeZone: "America/Los_Angeles" })
+  );
 
   return (
-    playedLA.getFullYear() === nowLA.getFullYear() &&
-    playedLA.getMonth() === nowLA.getMonth() &&
-    playedLA.getDate() === nowLA.getDate()
-  );
-}
-
-// Convert any date into Los Angeles time
-function toLA(date) {
-  return new Date(
-    date.toLocaleString("en-US", { timeZone: "America/Los_Angeles" })
+    inputLocal.getFullYear() === nowLocal.getFullYear() &&
+    inputLocal.getMonth() === nowLocal.getMonth() &&
+    inputLocal.getDate() === nowLocal.getDate()
   );
 }
