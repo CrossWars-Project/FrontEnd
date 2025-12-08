@@ -1,12 +1,21 @@
-// helper function which checks if the user has already played today.
 export default function playedToday(dateString) {
   if (!dateString) return false;
-  const date = new Date(dateString);
-  const today = new Date();
+
+  const inputUTC = new Date(dateString);
+  if (isNaN(inputUTC)) return false;
+
+  // Convert both dates into America/Los_Angeles calendar time
+  const inputLocal = new Date(
+    inputUTC.toLocaleString("en-US", { timeZone: "America/Los_Angeles" })
+  );
+
+  const nowLocal = new Date(
+    new Date().toLocaleString("en-US", { timeZone: "America/Los_Angeles" })
+  );
 
   return (
-    date.getUTCFullYear() === today.getUTCFullYear() &&
-    date.getUTCMonth() === today.getUTCMonth() &&
-    date.getUTCDate() === today.getUTCDate()
+    inputLocal.getFullYear() === nowLocal.getFullYear() &&
+    inputLocal.getMonth() === nowLocal.getMonth() &&
+    inputLocal.getDate() === nowLocal.getDate()
   );
 }
